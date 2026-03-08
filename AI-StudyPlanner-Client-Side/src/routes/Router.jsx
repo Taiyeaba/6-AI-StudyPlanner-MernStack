@@ -6,8 +6,6 @@ import Blog from "../Withoutloginfile/Blog";
 import About from "../Withoutloginfile/About";
 import Features from "../Withoutloginfile/Features";
 import Pricing from "../Withoutloginfile/Pricing";
-import Login from "../Authentication/Login";
-import Register from "../Authentication/Register";
 import Dashboard from "../LoginFile/Dashboard";
 import MyPlans from "../LoginFile/MyPlans";
 import Calendar from "../LoginFile/Calendar";
@@ -73,15 +71,7 @@ export const router = createBrowserRouter([
 
 
 
-       {
-        path: '/login',
-        element: <Login />,
-      },
-
-      {
-        path: '/register',
-        element: <Register />,
-      },
+       
 
     ]
   },
