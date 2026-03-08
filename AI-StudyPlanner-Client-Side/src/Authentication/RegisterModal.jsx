@@ -1,27 +1,52 @@
+
 import React, { useState } from "react";
 import SocialLoginModal from "./SocialLoginModal";
 import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useAuth from "../hooks/UseAuth";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { register, handleSubmit, formState: { errors }, watch } = useForm();
-  const {createUser} = useAuth();
-
+  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
+  const { createUser } = useAuth();
+  const navigate = useNavigate();
   
   const password = watch("password");
 
   const onSubmit = (data) => {
     console.log("Register Data:", data);
-    createUser(data.email,data.password)
-    .then(result => {
-      console.log(result.user)
-    })
-    .catch(error => {
-      console.log(error);
-    })
+    createUser(data.email, data.password)
+      .then(result => {
+        console.log(result.user);
+        
+        // SweetAlert for success
+        Swal.fire({
+          icon: 'success',
+          title: 'Registration Successful!',
+          text: 'Welcome to Study Planner',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        
+     
+        onClose();
+        reset();
+        navigate('/');
+      })
+      .catch(error => {
+        console.log(error);
+        
+       
+        Swal.fire({
+          icon: 'error',
+          title: 'Registration Failed',
+          text: error.message || 'Something went wrong',
+          confirmButtonColor: '#6366f1'
+        });
+      });
   };
 
   if (!isOpen) return null;
@@ -170,7 +195,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
         {/* Social Login */}
         <div className="mt-6">
-          <SocialLoginModal />
+          <SocialLoginModal onClose={onClose} />
         </div>
 
         {/* Switch to Login */}

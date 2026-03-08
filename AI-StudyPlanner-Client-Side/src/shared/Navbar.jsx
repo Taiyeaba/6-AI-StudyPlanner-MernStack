@@ -3,6 +3,7 @@ import { Link, NavLink, } from 'react-router-dom';
 import LoginModal from '../Authentication/LoginModal';
 import RegisterModal from '../Authentication/RegisterModal';
 import useAuth from '../hooks/UseAuth';
+import Swal from 'sweetalert2';
 
 const Navbar = () => {
   
@@ -14,19 +15,32 @@ const Navbar = () => {
   
   const { user, logOut } = useAuth();
 
+ 
   const handleLogout = () => {
-    console.log('logout');
-    logOut()
-    .then(() =>{
-      alert("logout successfully");
+  console.log('logout');
+  logOut()
+    .then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Logged Out Successfully!',
+        text: 'You have been logged out',
+        timer: 1500,
+        showConfirmButton: false
+      });
+      setIsMobileMenuOpen(false);
     })
-    .catch((error) =>{
+    .catch((error) => {
       console.log(error);
-    })
-   
-    
-    setIsMobileMenuOpen(false);
-  };
+      Swal.fire({
+        icon: 'error',
+        title: 'Logout Failed',
+        text: error.message || 'Something went wrong',
+        confirmButtonColor: '#6366f1'
+      });
+    });
+};
+
+
 
   // Active link style for desktop
   const activeLinkStyle = ({ isActive }) =>

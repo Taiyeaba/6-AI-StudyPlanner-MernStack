@@ -36,7 +36,7 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link to="/register">
+            <Link to="">
               <button className="group relative px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-xl font-semibold text-lg transition-all transform hover:scale-105 shadow-lg shadow-indigo-500/25 w-full sm:w-auto">
                 <span className="flex items-center justify-center gap-2">
                   Get Started Free
@@ -46,7 +46,7 @@ const HeroSection = () => {
                 </span>
               </button>
             </Link>
-            <Link to="/demo">
+            <Link to="">
               <button className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white rounded-xl font-semibold text-lg transition-all w-full sm:w-auto">
                 Watch Demo
               </button>

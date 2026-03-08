@@ -1,20 +1,49 @@
+
+
 import React, { useState } from "react";
 import SocialLoginModal from "./SocialLoginModal";
 import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useAuth from "../hooks/UseAuth";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm();
-  const {signIn} = useAuth();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   const onSubmit = (data) => {
-    signIn(data.email,data.password)
-    .then(result =>{
-      console.log(result.user);
-    })
-    .catch(error => console.log(error))
+    signIn(data.email, data.password)
+      .then(result => {
+        console.log(result.user);
+        
+      
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Successful!',
+          text: 'Welcome back to Study Planner',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        
+       
+        onClose();
+        reset();
+        navigate('/'); 
+      })
+      .catch(error => {
+        console.log(error);
+        
+       
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: error.message || 'Invalid email or password',
+          confirmButtonColor: '#6366f1'
+        });
+      });
   };
 
   if (!isOpen) return null;
@@ -93,7 +122,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
 
         {/* Social Login */}
         <div className="mt-6">
-          <SocialLoginModal />
+          <SocialLoginModal onClose={onClose} />
         </div>
 
         {/* Switch to Register */}
@@ -114,4 +143,4 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
   );
 };
 
-export default LoginModal;
+export default LoginModal;  
