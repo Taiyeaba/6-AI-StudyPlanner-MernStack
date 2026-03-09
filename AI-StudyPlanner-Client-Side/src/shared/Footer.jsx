@@ -56,11 +56,11 @@ const Footer = () => {
           <div className="space-y-4 text-center sm:text-left">
             <h3 className="text-white font-semibold text-lg">Resources</h3>
             <ul className="space-y-3">
-              <FooterLink to="/help">Help Center</FooterLink>
-              <FooterLink to="/guides">Study Guides</FooterLink>
-              <FooterLink to="/templates">Plan Templates</FooterLink>
-              <FooterLink to="/community">Community</FooterLink>
-              <FooterLink to="/faq">FAQ</FooterLink>
+              <FooterLink to="">Help Center</FooterLink>
+              <FooterLink to="">Study Guides</FooterLink>
+              <FooterLink to="">Plan Templates</FooterLink>
+              <FooterLink to="">Community</FooterLink>
+              <FooterLink to="">FAQ</FooterLink>
             </ul>
           </div>
 

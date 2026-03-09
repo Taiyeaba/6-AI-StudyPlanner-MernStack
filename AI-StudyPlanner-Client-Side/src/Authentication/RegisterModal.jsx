@@ -6,6 +6,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useAuth from "../hooks/UseAuth";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import useAxiosSecure from "../hooks/useAxiosSecure";
 
 const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,41 +14,79 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { createUser } = useAuth();
   const navigate = useNavigate();
-  
+  const axiosSecure = useAxiosSecure();
   const password = watch("password");
 
-  const onSubmit = (data) => {
-    console.log("Register Data:", data);
-    createUser(data.email, data.password)
-      .then(result => {
-        console.log(result.user);
+  // const onSubmit = (data) => {
+  //   console.log("Register Data:", data);
+  //   createUser(data.email, data.password)
+  //     .then(result => {
+  //       console.log(result.user);
         
-        // SweetAlert for success
-        Swal.fire({
-          icon: 'success',
-          title: 'Registration Successful!',
-          text: 'Welcome to Study Planner',
-          timer: 1500,
-          showConfirmButton: false
-        });
+  //       // SweetAlert for success
+  //       Swal.fire({
+  //         icon: 'success',
+  //         title: 'Registration Successful!',
+  //         text: 'Welcome to Study Planner',
+  //         timer: 1500,
+  //         showConfirmButton: false
+  //       });
         
      
-        onClose();
-        reset();
-        navigate('/');
-      })
-      .catch(error => {
-        console.log(error);
+  //       onClose();
+  //       reset();
+  //       navigate('/');
+  //     })
+  //     .catch(error => {
+  //       console.log(error);
         
        
-        Swal.fire({
-          icon: 'error',
-          title: 'Registration Failed',
-          text: error.message || 'Something went wrong',
-          confirmButtonColor: '#6366f1'
-        });
+  //       Swal.fire({
+  //         icon: 'error',
+  //         title: 'Registration Failed',
+  //         text: error.message || 'Something went wrong',
+  //         confirmButtonColor: '#6366f1'
+  //       });
+  //     });
+  // };
+
+  const onSubmit = (data) => {
+
+  createUser(data.email, data.password)
+    .then(async (result) => {
+      console.log(result.user);
+
+      const userInfo = {
+        name: data.name,
+        email: data.email,
+        createdAt: new Date()
+      };
+
+      // MongoDB save
+      await axiosSecure.post('/users', userInfo);
+  console.log(data); // <-- এটা add করো
+      Swal.fire({
+        icon: 'success',
+        title: 'Registration Successful!',
+        text: 'Welcome to Study Planner',
+        timer: 1500,
+        showConfirmButton: false
       });
-  };
+
+      onClose();
+      reset();
+      navigate('/');
+    })
+    .catch(error => {
+      console.log(error);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Registration Failed',
+        text: error.message
+      });
+    });
+};
 
   if (!isOpen) return null;
 
