@@ -12,6 +12,9 @@ import Calendar from "../LoginFile/Calendar";
 import Analytics from "../LoginFile/Analytics";
 import BlogPost from "../Withoutloginfile/BlogPost";
 import BlogDetails from "../Withoutloginfile/BlogDetails";
+import CreatePlan from "../LoginFile/CreatePlan";
+import PlanDetails from "../LoginFile/PlanDetails";
+import EditPlan from "../LoginFile/EditPlan";
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +52,22 @@ export const router = createBrowserRouter([
         path: '/plans',
         element: <MyPlans />,
       },
+        {
+        path: '/plan/new', 
+        element: <CreatePlan />,
+      },
+
+      {
+        path: '/plan/:id',        // View details
+        element: <PlanDetails />,
+      },
+      {
+        path: '/plan/:id/edit',    // Edit plan
+        element: <EditPlan />,
+      },
+
+
+
 
       {
         path: '/calendar',
