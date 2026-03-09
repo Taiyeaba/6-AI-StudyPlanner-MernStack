@@ -1,4 +1,5 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const admin = require("firebase-admin");
 const express = require('express');
 const cors = require('cors');
 const app = express()
@@ -9,6 +10,15 @@ require('dotenv').config();
 //middleware
 app.use(cors());
 app.use(express.json());
+
+//firebase
+
+const serviceAccount = require("./firebasekey.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 
 
 
@@ -32,6 +42,30 @@ async function run() {
 const database = client.db('StudyPlan');
 const usersCollection = database.collection('users');
 
+//custom middlewares
+const verifyFBToken = async(req,res,next) => {
+  const authHeader = req.headers.authorization;
+  if(!authHeader){
+    return res.status(401).send({message:'unauthorized Access'})
+  }
+  const token = authHeader.split(' ')[1];
+  if(!token){
+    return  res.status(401).send({message:'unauthorized Access'})
+  }
+  //verify the token
+  try{
+    const decoded = await admin.auth().verifyIdToken(token);
+    req.decoded = decoded;
+      next();
+  }
+catch (error){
+  return res.status(403).send({message:'forbidden access'})
+}
+
+}
+
+
+
 
 //users collection
 
@@ -50,7 +84,6 @@ app.post('/users', async (req, res) => {
 });
 
 
-
 app.get('/users/:email', async (req, res) => {
   const email = req.params.email;
   const query = { email: email };
@@ -58,8 +91,14 @@ app.get('/users/:email', async (req, res) => {
   res.send(user);
 });
 
-
+app.get('/users',verifyFBToken , async (req, res) => {
+  const result = await usersCollection.find().toArray();
+  res.send(result);
+});
    
+
+
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
