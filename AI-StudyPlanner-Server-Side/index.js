@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const admin = require("firebase-admin");
 const express = require('express');
 const cors = require('cors');
@@ -41,6 +41,10 @@ async function run() {
 
 const database = client.db('StudyPlan');
 const usersCollection = database.collection('users');
+const planCollection = database.collection('plans');
+const taskCollection = database.collection('tasks');
+
+
 
 //custom middlewares
 const verifyFBToken = async(req,res,next) => {
@@ -96,6 +100,130 @@ app.get('/users',verifyFBToken , async (req, res) => {
   res.send(result);
 });
    
+
+//my plan pg
+
+// 📌 1. GET all plans (একজন user এর সব plans)
+app.get('/api/plans', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.query; // frontend থেকে email পাঠাবে
+    const query = { userEmail: email };
+    const plans = await planCollection.find(query).sort({ createdAt: -1 }).toArray();
+    res.send(plans);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 2. GET single plan (একটি specific plan)
+app.get('/api/plans/:id', verifyFBToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const query = { _id: new ObjectId(id) };
+    const plan = await planCollection.findOne(query);
+    res.send(plan);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 3. POST new plan (নতুন plan তৈরি)
+app.post('/api/plans', verifyFBToken, async (req, res) => {
+  try {
+    const planData = req.body;
+    const result = await planCollection.insertOne({
+      ...planData,
+      createdAt: new Date()
+    });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 4. PUT update plan (plan এডিট)
+app.put('/api/plans/:id', verifyFBToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    const query = { _id: new ObjectId(id) };
+    const result = await planCollection.updateOne(query, { $set: updateData });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 5. DELETE plan (plan ডিলিট)
+app.delete('/api/plans/:id', verifyFBToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const query = { _id: new ObjectId(id) };
+    const result = await planCollection.deleteOne(query);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+//task pg
+
+
+// 📌 1. GET tasks by planId (একটি plan এর সব tasks)
+app.get('/api/tasks/:planId', verifyFBToken, async (req, res) => {
+  try {
+    const { planId } = req.params;
+    const tasks = await taskCollection.find({ planId }).toArray();
+    res.send(tasks);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 2. POST new task (নতুন task তৈরি)
+app.post('/api/tasks', verifyFBToken, async (req, res) => {
+  try {
+    const taskData = req.body;
+    const result = await taskCollection.insertOne({
+      ...taskData,
+      createdAt: new Date()
+    });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 3. PUT update task (status change / edit)
+app.put('/api/tasks/:id', verifyFBToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    const query = { _id: new ObjectId(id) };
+    const result = await taskCollection.updateOne(query, { $set: updateData });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 4. DELETE task
+app.delete('/api/tasks/:id', verifyFBToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const query = { _id: new ObjectId(id) };
+    const result = await taskCollection.deleteOne(query);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+
+
+
+
+
 
 
 
