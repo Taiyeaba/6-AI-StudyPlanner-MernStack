@@ -103,7 +103,7 @@ app.get('/users',verifyFBToken , async (req, res) => {
 
 //my plan pg
 
-// 📌 1. GET all plans (একজন user এর সব plans)
+//  1. GET all plans 
 app.get('/api/plans', verifyFBToken, async (req, res) => {
   try {
     const { email } = req.query; // frontend থেকে email পাঠাবে
@@ -115,7 +115,7 @@ app.get('/api/plans', verifyFBToken, async (req, res) => {
   }
 });
 
-// 📌 2. GET single plan (একটি specific plan)
+//  2. GET single plan 
 app.get('/api/plans/:id', verifyFBToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,7 +127,7 @@ app.get('/api/plans/:id', verifyFBToken, async (req, res) => {
   }
 });
 
-// 📌 3. POST new plan (নতুন plan তৈরি)
+//  3. POST new plan 
 app.post('/api/plans', verifyFBToken, async (req, res) => {
   try {
     const planData = req.body;
@@ -141,7 +141,7 @@ app.post('/api/plans', verifyFBToken, async (req, res) => {
   }
 });
 
-// 📌 4. PUT update plan (plan এডিট)
+//  4. PUT update plan 
 app.put('/api/plans/:id', verifyFBToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -154,7 +154,7 @@ app.put('/api/plans/:id', verifyFBToken, async (req, res) => {
   }
 });
 
-// 📌 5. DELETE plan (plan ডিলিট)
+//  5. DELETE plan 
 app.delete('/api/plans/:id', verifyFBToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -169,7 +169,7 @@ app.delete('/api/plans/:id', verifyFBToken, async (req, res) => {
 //task pg
 
 
-// 📌 1. GET tasks by planId (একটি plan এর সব tasks)
+//  1. GET tasks by planId 
 app.get('/api/tasks/:planId', verifyFBToken, async (req, res) => {
   try {
     const { planId } = req.params;
@@ -210,7 +210,7 @@ app.post('/api/tasks', verifyFBToken, async (req, res) => {
   }
 });
 
-// 📌 3. PUT update task (status change / edit)
+// 3. PUT update task 
 app.put('/api/tasks/:id', verifyFBToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -223,7 +223,7 @@ app.put('/api/tasks/:id', verifyFBToken, async (req, res) => {
   }
 });
 
-// 📌 4. DELETE task
+//  4. DELETE task
 app.delete('/api/tasks/:id', verifyFBToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -238,140 +238,6 @@ app.delete('/api/tasks/:id', verifyFBToken, async (req, res) => {
 
 
 //dashboard
-
-// app.get('/api/dashboard/stats', verifyFBToken, async (req, res) => {
-//   try {
-//     const { email } = req.query;
-    
-//     console.log('📊 Fetching dashboard stats for:', email);
-    
-//     // 1. Total Plans count
-//     const totalPlans = await planCollection.countDocuments({ userEmail: email });
-    
-//     // 2. Today's date in YYYY-MM-DD format
-//     const today = new Date();
-//     const year = today.getFullYear();
-//     const month = String(today.getMonth() + 1).padStart(2, '0');
-//     const day = String(today.getDate()).padStart(2, '0');
-//     const todayStr = `${year}-${month}-${day}`;
-    
-//     console.log('📅 Today date:', todayStr);
-    
-//     // 3. Get all plans for this user
-//     const userPlans = await planCollection.find({ userEmail: email }).toArray();
-//     const planIds = userPlans.map(plan => plan._id.toString());
-    
-//     console.log('📚 User plans count:', planIds.length);
-    
-//     // 4. Get all tasks
-//     const allTasks = await taskCollection.find().toArray();
-    
-//     // 5. Filter tasks that belong to user's plans
-//     const userTasks = allTasks.filter(task => planIds.includes(task.planId));
-    
-//     console.log('📋 Total user tasks:', userTasks.length);
-    
-//     // 6. Filter today's tasks
-//     const todayTasks = userTasks.filter(task => {
-//       if (!task.dueDate) return false;
-      
-//       let taskDateStr = '';
-      
-//       if (typeof task.dueDate === 'string') {
-//         taskDateStr = task.dueDate.split('T')[0];
-//       } else if (task.dueDate instanceof Date) {
-//         const d = new Date(task.dueDate);
-//         taskDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-//       }
-      
-//       return taskDateStr === todayStr;
-//     });
-    
-//     console.log('✅ Today tasks found:', todayTasks.length);
-    
-//     const todayTasksCount = todayTasks.length;
-//     const completedTodayCount = todayTasks.filter(t => t.status === 'Completed').length;
-    
-//     // 7. Recent Plans (last 5)
-//     const recentPlans = await planCollection
-//       .find({ userEmail: email })
-//       .sort({ createdAt: -1 })
-//       .limit(5)
-//       .toArray();
-    
-//     // 8. Today's Tasks List
-//     const todayTasksList = todayTasks.map(task => ({
-//       ...task,
-//       _id: task._id.toString()
-//     }));
-    
-//     // 9. Total Study Hours (from completed tasks)
-//     const completedTasks = userTasks.filter(t => t.status === 'Completed');
-//     const totalStudyHours = completedTasks.reduce((sum, task) => sum + (task.estimatedTime || 0), 0);
-    
-//     // 10. 🔥 STREAK CALCULATION (Real)
-//     let streak = 0;
-//     let currentDate = new Date(today);
-    
-//     // Maximum 30 days streak check korbo
-//     for (let i = 0; i < 30; i++) {
-//       const checkDate = new Date(currentDate);
-//       checkDate.setDate(currentDate.getDate() - i);
-      
-//       const year = checkDate.getFullYear();
-//       const month = String(checkDate.getMonth() + 1).padStart(2, '0');
-//       const day = String(checkDate.getDate()).padStart(2, '0');
-//       const dateStr = `${year}-${month}-${day}`;
-      
-//       // Check if any task completed on this date
-//       const tasksOnDate = userTasks.filter(task => {
-//         if (task.status !== 'Completed') return false;
-        
-//         let taskDateStr = '';
-//         if (typeof task.dueDate === 'string') {
-//           taskDateStr = task.dueDate.split('T')[0];
-//         } else if (task.dueDate instanceof Date) {
-//           const d = new Date(task.dueDate);
-//           taskDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-//         }
-        
-//         return taskDateStr === dateStr;
-//       });
-      
-//       if (tasksOnDate.length > 0) {
-//         streak++;
-//         console.log(`🔥 Day ${i+1}: ${dateStr} - ${tasksOnDate.length} tasks completed`);
-//       } else {
-//         // If today (i=0) has no tasks, streak = 0
-//         // If previous days have no tasks, break
-//         if (i === 0) {
-//           streak = 0;
-//         }
-//         break;
-//       }
-//     }
-    
-//     console.log('🔥 Final streak:', streak);
-    
-//     const stats = {
-//       totalPlans,
-//       todayTasks: todayTasksCount,
-//       completedToday: completedTodayCount,
-//       studyHours: totalStudyHours,
-//       streak: streak, // Real streak value
-//       recentPlans,
-//       todayTasksList
-//     };
-    
-//     console.log('📊 Sending stats:', stats);
-//     res.send(stats);
-    
-//   } catch (error) {
-//     console.error('❌ Dashboard stats error:', error);
-//     res.status(500).send({ message: error.message });
-//   }
-// });
-
 
 app.get('/api/dashboard/stats', verifyFBToken, async (req, res) => {
   try {
@@ -472,9 +338,9 @@ app.get('/api/dashboard/stats', verifyFBToken, async (req, res) => {
     
     const stats = {
       totalPlans,
-      totalTasks,              // ✅ Total tasks
-      completedTasks,          // ✅ Completed tasks
-      studyHours: totalStudyHours, // ✅ Study hours
+      totalTasks,             
+      completedTasks,          
+      studyHours: totalStudyHours, 
       todayTasks: todayTasksCount,
       completedToday: completedTodayCount,
       streak,
@@ -834,7 +700,6 @@ app.get('/api/calendar/tasks-by-date', verifyFBToken, async (req, res) => {
 
 //profile
 
-
 app.put('/users/:email', verifyFBToken, async (req, res) => {
   try {
     const { email } = req.params;
@@ -851,7 +716,7 @@ app.put('/users/:email', verifyFBToken, async (req, res) => {
 });
 
 
-// 📌 DELETE user account (সব ডাটা সহ)
+// 📌 DELETE user account (with all data)
 app.delete('/users/:email', verifyFBToken, async (req, res) => {
   try {
     const { email } = req.params;
@@ -889,7 +754,44 @@ app.delete('/users/:email', verifyFBToken, async (req, res) => {
 
 
 
+// gmail **********************
 
+app.get('/users/:email/settings', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.params;
+    const user = await usersCollection.findOne({ email });
+    
+    res.send({
+      emailNotifications: user?.emailNotifications || false,
+      reminderTime: user?.reminderTime || '8',
+      reminderEnabled: user?.reminderEnabled || false
+    });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+
+app.put('/users/:email/reminder', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { emailNotifications, reminderTime, reminderEnabled } = req.body;
+    
+    const updateData = {};
+    if (emailNotifications !== undefined) updateData.emailNotifications = emailNotifications;
+    if (reminderTime !== undefined) updateData.reminderTime = reminderTime;
+    if (reminderEnabled !== undefined) updateData.reminderEnabled = reminderEnabled;
+    
+    await usersCollection.updateOne(
+      { email },
+      { $set: updateData }
+    );
+    
+    res.send({ success: true });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
 
 
 
@@ -908,6 +810,150 @@ run().catch(console.dir);
 
 
 
+
+
+// ******** EMAIL REMINDER SYSTEM
+
+
+const nodemailer = require('nodemailer');
+const cron = require('node-cron');
+
+// Email transporter setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Send email function
+const sendReminderEmail = async (user, tasks) => {
+  try {
+    // Create task list HTML
+    const taskList = tasks.map(task => `
+      <tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 12px; color: #1f2937;">${task.title}</td>
+        <td style="padding: 12px; color: #4b5563;">${task.estimatedTime}h</td>
+        <td style="padding: 12px;">
+          <span style="background: ${task.status === 'Pending' ? '#ef4444' : '#f59e0b'}; 
+                       color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+            ${task.status}
+          </span>
+        </td>
+      </tr>
+    `).join('');
+
+    // Email HTML template
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0;">📚 Study Planner</h1>
+          <p style="color: #e0e7ff; margin: 10px 0 0;">Daily Study Reminder</p>
+        </div>
+        
+        <!-- Content -->
+        <div style="background: white; padding: 30px; border: 1px solid #e5e7eb;">
+          <h2 style="color: #1f2937; margin-top: 0;">Hello ${user.name || 'Student'}! 👋</h2>
+          <p style="color: #4b5563;">You have <strong>${tasks.length}</strong> task${tasks.length > 1 ? 's' : ''} scheduled for today:</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <thead>
+              <tr style="background: #f3f4f6;">
+                <th style="padding: 12px; text-align: left; color: #374151;">Task</th>
+                <th style="padding: 12px; text-align: left; color: #374151;">Hours</th>
+                <th style="padding: 12px; text-align: left; color: #374151;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${taskList}
+            </tbody>
+          </table>
+          
+          <a href="${process.env.FRONTEND_URL}/dashboard" 
+             style="display: inline-block; background: #4f46e5; color: white; padding: 12px 30px; 
+                    text-decoration: none; border-radius: 5px; margin-top: 20px;">
+            View Dashboard →
+          </a>
+        </div>
+        
+        <!-- Footer -->
+        <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
+          <p>Stay consistent and achieve your goals! 💪</p>
+          <p style="margin-top: 10px;">© 2026 Study Planner</p>
+        </div>
+      </div>
+    `;
+
+    // Send email
+    await transporter.sendMail({
+      from: '"Study Planner" <noreply@studyplanner.com>',
+      to: user.email,
+      subject: `📚 ${tasks.length} Task${tasks.length > 1 ? 's' : ''} for Today`,
+      html
+    });
+
+    console.log(`✅ Email sent to ${user.email}`);
+  } catch (error) {
+    console.error(`❌ Email error for ${user.email}:`, error.message);
+  }
+};
+
+// ⏰ Check reminders every minute
+cron.schedule('* * * * *', async () => {
+  console.log('⏰ Checking for reminders...');
+  
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  // Only run at minute 0 of each hour
+  if (currentMinute !== 0) return;
+  
+  try {
+    // Get all users with notifications enabled
+    const users = await usersCollection.find({ 
+      emailNotifications: true,
+      reminderEnabled: true 
+    }).toArray();
+    
+    console.log(`📊 Found ${users.length} users with reminders enabled`);
+    
+    for (const user of users) {
+      // Check if current hour matches user's reminder time
+      const reminderTime = parseInt(user.reminderTime || '8');
+      
+      if (reminderTime === currentHour) {
+        console.log(`⏰ Time to send reminder to ${user.email} (${reminderTime}:00)`);
+        
+        // Get today's date
+        const todayStr = now.toISOString().split('T')[0];
+        
+        // Get user's plans
+        const userPlans = await planCollection.find({ userEmail: user.email }).toArray();
+        const planIds = userPlans.map(p => p._id.toString());
+        
+        // Get all tasks
+        const allTasks = await taskCollection.find().toArray();
+        
+        // Filter today's tasks
+        const todayTasks = allTasks.filter(t => 
+          planIds.includes(t.planId) && 
+          t.dueDate?.split('T')[0] === todayStr
+        );
+        
+        if (todayTasks.length > 0) {
+          await sendReminderEmail(user, todayTasks);
+        } else {
+          console.log(`📭 No tasks today for ${user.email}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Reminder cron error:', error);
+  }
+});
 
 
 

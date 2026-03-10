@@ -31,10 +31,18 @@ const Profile = () => {
     confirm: ''
   });
 
+  // Email Reminder Settings
+  const [reminderSettings, setReminderSettings] = useState({
+    emailNotifications: false,
+    reminderTime: '8',
+    reminderEnabled: false
+  });
+
   useEffect(() => {
     if (user?.email) {
       fetchUserData();
       fetchUserStats();
+      fetchUserSettings();
     }
   }, [user]);
 
@@ -60,6 +68,17 @@ const Profile = () => {
     }
   };
 
+  // Fetch user reminder settings
+  const fetchUserSettings = async () => {
+    try {
+      const { data } = await axiosSecure.get(`/users/${user.email}/settings`);
+      setReminderSettings(data);
+      console.log('Reminder settings:', data);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
+
   const handleUpdateProfile = async () => {
     if (!editedName.trim()) {
       Swal.fire({
@@ -75,10 +94,10 @@ const Profile = () => {
 
     try {
       await axiosSecure.put(`/users/${user.email}`, { name: editedName });
-      
+
       setDbUser({ ...dbUser, name: editedName });
       setEditing(false);
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Success!',
@@ -100,6 +119,95 @@ const Profile = () => {
     }
   };
 
+  // Toggle Email Notifications
+  const handleToggleNotifications = async () => {
+    try {
+      const newValue = !reminderSettings.emailNotifications;
+      console.log('Toggling notifications to:', newValue);
+      
+      const response = await axiosSecure.put(`/users/${user.email}/reminder`, {
+        emailNotifications: newValue
+      });
+      
+      console.log('Update response:', response.data);
+      
+      setReminderSettings(prev => ({
+        ...prev,
+        emailNotifications: newValue
+      }));
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: `Email notifications ${newValue ? 'enabled' : 'disabled'}`,
+        timer: 1500,
+        showConfirmButton: false,
+        background: '#1f2937',
+        color: '#fff'
+      });
+    } catch (error) {
+      console.error('Error updating notifications:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: 'Failed to update settings',
+        background: '#1f2937',
+        color: '#fff'
+      });
+    }
+  };
+
+  // Toggle Daily Reminder
+  const handleToggleReminder = async () => {
+    try {
+      const newValue = !reminderSettings.reminderEnabled;
+      console.log('Toggling reminder to:', newValue);
+      
+      const response = await axiosSecure.put(`/users/${user.email}/reminder`, {
+        reminderEnabled: newValue
+      });
+      
+      console.log('Update response:', response.data);
+      
+      setReminderSettings(prev => ({
+        ...prev,
+        reminderEnabled: newValue
+      }));
+    } catch (error) {
+      console.error('Error updating reminder:', error);
+    }
+  };
+
+  // Change Reminder Time
+  const handleTimeChange = async (time) => {
+    try {
+      console.log('Changing time to:', time);
+      
+      const response = await axiosSecure.put(`/users/${user.email}/reminder`, {
+        reminderTime: time
+      });
+      
+      console.log('Update response:', response.data);
+      
+      setReminderSettings(prev => ({
+        ...prev,
+        reminderTime: time
+      }));
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: `Reminder time set to ${time}:00`,
+        timer: 1500,
+        showConfirmButton: false,
+        background: '#1f2937',
+        color: '#fff'
+      });
+    } catch (error) {
+      console.error('Error changing time:', error);
+    }
+  };
+
   // Re-authenticate user
   const handleReauthenticate = async () => {
     if (!reauthPassword) {
@@ -117,25 +225,22 @@ const Profile = () => {
     try {
       const auth = getAuth();
       const currentUser = auth.currentUser;
-      
+
       if (!currentUser) {
         throw new Error('No user logged in');
       }
 
       const credential = EmailAuthProvider.credential(currentUser.email, reauthPassword);
       await reauthenticateWithCredential(currentUser, credential);
-      
+
       setShowReauthModal(false);
       setReauthPassword('');
-      
-      // Execute pending action after successful reauthentication
+
       if (pendingAction === 'password') {
-        // Now update the password
         await updatePassword(currentUser, passwordData.new);
-        
         setShowPasswordModal(false);
         setPasswordData({ new: '', confirm: '' });
-        
+
         Swal.fire({
           icon: 'success',
           title: 'Success!',
@@ -148,17 +253,17 @@ const Profile = () => {
       } else if (pendingAction === 'delete') {
         await handleDeleteAccountAfterReauth();
       }
-      
+
       setPendingAction(null);
-      
+
     } catch (error) {
       console.error('Reauthentication error:', error);
-      
+
       let errorMessage = 'Incorrect password. Please try again.';
       if (error.code === 'auth/too-many-requests') {
         errorMessage = 'Too many failed attempts. Please try again later.';
       }
-      
+
       Swal.fire({
         icon: 'error',
         title: 'Authentication Failed',
@@ -216,23 +321,18 @@ const Profile = () => {
   // Delete account after reauth
   const handleDeleteAccountAfterReauth = async () => {
     try {
-      // 1. Get user's plans
       const userPlans = await axiosSecure.get(`/api/plans?email=${user.email}`);
-      
-      // 2. Delete all tasks and plans
+
       for (const plan of userPlans.data) {
         await axiosSecure.delete(`/api/tasks/${plan._id}`);
         await axiosSecure.delete(`/api/plans/${plan._id}`);
       }
 
-      // 3. Delete user from MongoDB
       await axiosSecure.delete(`/users/${user.email}`);
 
-      // 4. Delete user from Firebase
       const auth = getAuth();
       await auth.currentUser.delete();
 
-      // 5. Logout
       await logOut();
 
       Swal.fire({
@@ -298,7 +398,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 pt-16 sm:pt-20 px-3 sm:px-4 pb-10">
       <div className="max-w-4xl mx-auto">
-        
+
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 mb-4">
@@ -316,7 +416,7 @@ const Profile = () => {
 
         {/* Profile Card */}
         <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 mb-6">
-          
+
           {/* Profile Header */}
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
             {/* Profile Picture */}
@@ -324,8 +424,8 @@ const Profile = () => {
               <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 p-1">
                 <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
                   {user?.photoURL ? (
-                    <img 
-                      src={user.photoURL} 
+                    <img
+                      src={user.photoURL}
                       alt={dbUser?.name || user?.displayName}
                       className="w-full h-full object-cover"
                     />
@@ -402,22 +502,22 @@ const Profile = () => {
               <p className="text-xl sm:text-2xl font-bold text-indigo-400">{stats.totalPlans}</p>
               <p className="text-[10px] sm:text-xs text-gray-400">Total Plans</p>
             </div>
-            
+
             <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-400">{stats.totalTasks}</p>
               <p className="text-[10px] sm:text-xs text-gray-400">Total Tasks</p>
             </div>
-            
+
             <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 text-center">
               <p className="text-xl sm:text-2xl font-bold text-green-400">{stats.completedTasks}</p>
               <p className="text-[10px] sm:text-xs text-gray-400">Completed</p>
             </div>
-            
+
             <div className="bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 text-center">
               <p className="text-xl sm:text-2xl font-bold text-red-400">{stats.studyHours || 0}</p>
               <p className="text-[10px] sm:text-xs text-gray-400">Study Hours</p>
             </div>
-            
+
             <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 text-center col-span-2 sm:col-span-1">
               <p className="text-xl sm:text-2xl font-bold text-purple-400">{stats.streak || 0}</p>
               <p className="text-[10px] sm:text-xs text-gray-400">Day Streak</p>
@@ -427,7 +527,7 @@ const Profile = () => {
           {/* Account Actions */}
           <div className="border-t border-white/10 pt-4 sm:pt-6">
             <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Account Settings</h3>
-            
+
             <div className="space-y-2 sm:space-y-3">
               {/* Change Password Button */}
               <button
@@ -466,6 +566,77 @@ const Profile = () => {
           </div>
         </div>
 
+
+        {/* Email Reminder Settings */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <span>📧</span> Email Reminders
+          </h3>
+
+          {/* Email Notifications Toggle */}
+          <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg mb-3">
+            <div>
+              <p className="text-white font-medium">Email Notifications</p>
+              <p className="text-xs text-gray-400">Receive daily task reminders</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={reminderSettings.emailNotifications}
+                onChange={handleToggleNotifications}
+              />
+              <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-indigo-600 transition-all"></div>
+              <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+            </label>
+          </div>
+
+          {/* Daily Reminder Toggle (only if notifications ON) */}
+          {reminderSettings.emailNotifications && (
+            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg mb-3">
+              <div>
+                <p className="text-white font-medium">Daily Reminder</p>
+                <p className="text-xs text-gray-400">Get reminder at selected time</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={reminderSettings.reminderEnabled}
+                  onChange={handleToggleReminder}
+                />
+                <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-indigo-600 transition-all"></div>
+                <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+              </label>
+            </div>
+          )}
+
+          {/* Time Picker (only if reminder enabled) */}
+          {reminderSettings.reminderEnabled && (
+            <div className="p-4 bg-white/5 rounded-lg">
+              <p className="text-white text-sm mb-3">Select Reminder Time:</p>
+              <div className="grid grid-cols-3 gap-2">
+                {['8', '9', '10', '17', '18', '19', '20', '21', '22'].map(time => (
+                  <button
+                    key={time}
+                    onClick={() => handleTimeChange(time)}
+                    className={`py-2 px-3 rounded-lg text-sm transition-all ${
+                      reminderSettings.reminderTime === time
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    }`}
+                  >
+                    {time}:00
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-3">
+                ⏰ You'll receive email at {reminderSettings.reminderTime}:00
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Quick Actions */}
         <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
           <Link to="/dashboard" className="w-full sm:w-auto">
@@ -493,14 +664,14 @@ const Profile = () => {
                 type="password"
                 placeholder="New Password"
                 value={passwordData.new}
-                onChange={(e) => setPasswordData({...passwordData, new: e.target.value})}
+                onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })}
                 className="w-full p-2 sm:p-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base"
               />
               <input
                 type="password"
                 placeholder="Confirm New Password"
                 value={passwordData.confirm}
-                onChange={(e) => setPasswordData({...passwordData, confirm: e.target.value})}
+                onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })}
                 className="w-full p-2 sm:p-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base"
               />
               <p className="text-xs text-gray-400">Password must be at least 6 characters</p>
