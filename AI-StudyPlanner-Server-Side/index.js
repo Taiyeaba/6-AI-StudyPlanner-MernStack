@@ -180,16 +180,32 @@ app.get('/api/tasks/:planId', verifyFBToken, async (req, res) => {
   }
 });
 
-// 📌 2. POST new task (নতুন task তৈরি)
 app.post('/api/tasks', verifyFBToken, async (req, res) => {
   try {
     const taskData = req.body;
+    
+    // dueDate কে YYYY-MM-DD format এ save করো
+    let dueDate = taskData.dueDate;
+    
+    // যদি dueDate string এ থাকে, তাহলে ঠিক করে নাও
+    if (dueDate) {
+      const date = new Date(dueDate);
+      dueDate = date.toISOString().split('T')[0]; // "2024-03-15" format
+    }
+    
     const result = await taskCollection.insertOne({
-      ...taskData,
+      planId: taskData.planId,
+      title: taskData.title,
+      estimatedTime: Number(taskData.estimatedTime),
+      dueDate: dueDate,  // ঠিক format এ save হবে
+      status: taskData.status || 'Pending',
+      notes: taskData.notes || '',
       createdAt: new Date()
     });
+    
     res.send(result);
   } catch (error) {
+    console.error('Task creation error:', error);
     res.status(500).send({ message: error.message });
   }
 });
@@ -218,6 +234,659 @@ app.delete('/api/tasks/:id', verifyFBToken, async (req, res) => {
     res.status(500).send({ message: error.message });
   }
 });
+
+
+
+//dashboard
+
+// app.get('/api/dashboard/stats', verifyFBToken, async (req, res) => {
+//   try {
+//     const { email } = req.query;
+    
+//     console.log('📊 Fetching dashboard stats for:', email);
+    
+//     // 1. Total Plans count
+//     const totalPlans = await planCollection.countDocuments({ userEmail: email });
+    
+//     // 2. Today's date in YYYY-MM-DD format
+//     const today = new Date();
+//     const year = today.getFullYear();
+//     const month = String(today.getMonth() + 1).padStart(2, '0');
+//     const day = String(today.getDate()).padStart(2, '0');
+//     const todayStr = `${year}-${month}-${day}`;
+    
+//     console.log('📅 Today date:', todayStr);
+    
+//     // 3. Get all plans for this user
+//     const userPlans = await planCollection.find({ userEmail: email }).toArray();
+//     const planIds = userPlans.map(plan => plan._id.toString());
+    
+//     console.log('📚 User plans count:', planIds.length);
+    
+//     // 4. Get all tasks
+//     const allTasks = await taskCollection.find().toArray();
+    
+//     // 5. Filter tasks that belong to user's plans
+//     const userTasks = allTasks.filter(task => planIds.includes(task.planId));
+    
+//     console.log('📋 Total user tasks:', userTasks.length);
+    
+//     // 6. Filter today's tasks
+//     const todayTasks = userTasks.filter(task => {
+//       if (!task.dueDate) return false;
+      
+//       let taskDateStr = '';
+      
+//       if (typeof task.dueDate === 'string') {
+//         taskDateStr = task.dueDate.split('T')[0];
+//       } else if (task.dueDate instanceof Date) {
+//         const d = new Date(task.dueDate);
+//         taskDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+//       }
+      
+//       return taskDateStr === todayStr;
+//     });
+    
+//     console.log('✅ Today tasks found:', todayTasks.length);
+    
+//     const todayTasksCount = todayTasks.length;
+//     const completedTodayCount = todayTasks.filter(t => t.status === 'Completed').length;
+    
+//     // 7. Recent Plans (last 5)
+//     const recentPlans = await planCollection
+//       .find({ userEmail: email })
+//       .sort({ createdAt: -1 })
+//       .limit(5)
+//       .toArray();
+    
+//     // 8. Today's Tasks List
+//     const todayTasksList = todayTasks.map(task => ({
+//       ...task,
+//       _id: task._id.toString()
+//     }));
+    
+//     // 9. Total Study Hours (from completed tasks)
+//     const completedTasks = userTasks.filter(t => t.status === 'Completed');
+//     const totalStudyHours = completedTasks.reduce((sum, task) => sum + (task.estimatedTime || 0), 0);
+    
+//     // 10. 🔥 STREAK CALCULATION (Real)
+//     let streak = 0;
+//     let currentDate = new Date(today);
+    
+//     // Maximum 30 days streak check korbo
+//     for (let i = 0; i < 30; i++) {
+//       const checkDate = new Date(currentDate);
+//       checkDate.setDate(currentDate.getDate() - i);
+      
+//       const year = checkDate.getFullYear();
+//       const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+//       const day = String(checkDate.getDate()).padStart(2, '0');
+//       const dateStr = `${year}-${month}-${day}`;
+      
+//       // Check if any task completed on this date
+//       const tasksOnDate = userTasks.filter(task => {
+//         if (task.status !== 'Completed') return false;
+        
+//         let taskDateStr = '';
+//         if (typeof task.dueDate === 'string') {
+//           taskDateStr = task.dueDate.split('T')[0];
+//         } else if (task.dueDate instanceof Date) {
+//           const d = new Date(task.dueDate);
+//           taskDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+//         }
+        
+//         return taskDateStr === dateStr;
+//       });
+      
+//       if (tasksOnDate.length > 0) {
+//         streak++;
+//         console.log(`🔥 Day ${i+1}: ${dateStr} - ${tasksOnDate.length} tasks completed`);
+//       } else {
+//         // If today (i=0) has no tasks, streak = 0
+//         // If previous days have no tasks, break
+//         if (i === 0) {
+//           streak = 0;
+//         }
+//         break;
+//       }
+//     }
+    
+//     console.log('🔥 Final streak:', streak);
+    
+//     const stats = {
+//       totalPlans,
+//       todayTasks: todayTasksCount,
+//       completedToday: completedTodayCount,
+//       studyHours: totalStudyHours,
+//       streak: streak, // Real streak value
+//       recentPlans,
+//       todayTasksList
+//     };
+    
+//     console.log('📊 Sending stats:', stats);
+//     res.send(stats);
+    
+//   } catch (error) {
+//     console.error('❌ Dashboard stats error:', error);
+//     res.status(500).send({ message: error.message });
+//   }
+// });
+
+
+app.get('/api/dashboard/stats', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    console.log('📊 Fetching dashboard stats for:', email);
+    
+    // 1. Total Plans count
+    const totalPlans = await planCollection.countDocuments({ userEmail: email });
+    
+    // 2. Today's date
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+    
+    // 3. Get all plans for this user
+    const userPlans = await planCollection.find({ userEmail: email }).toArray();
+    const planIds = userPlans.map(plan => plan._id.toString());
+    
+    // 4. Get all tasks
+    const allTasks = await taskCollection.find().toArray();
+    
+    // 5. Filter tasks that belong to user's plans
+    const userTasks = allTasks.filter(task => planIds.includes(task.planId));
+    
+    // 6. Calculate totals
+    const totalTasks = userTasks.length;
+    const completedTasks = userTasks.filter(t => t.status === 'Completed').length;
+    const totalStudyHours = userTasks
+      .filter(t => t.status === 'Completed')
+      .reduce((sum, task) => sum + (task.estimatedTime || 0), 0);
+    
+    // 7. Today's tasks
+    const todayTasks = userTasks.filter(task => {
+      if (!task.dueDate) return false;
+      
+      let taskDateStr = '';
+      if (typeof task.dueDate === 'string') {
+        taskDateStr = task.dueDate.split('T')[0];
+      } else if (task.dueDate instanceof Date) {
+        const d = new Date(task.dueDate);
+        taskDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      
+      return taskDateStr === todayStr;
+    });
+    
+    const todayTasksCount = todayTasks.length;
+    const completedTodayCount = todayTasks.filter(t => t.status === 'Completed').length;
+    
+    // 8. Recent Plans (last 5)
+    const recentPlans = await planCollection
+      .find({ userEmail: email })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .toArray();
+    
+    // 9. Today's Tasks List
+    const todayTasksList = todayTasks.map(task => ({
+      ...task,
+      _id: task._id.toString()
+    }));
+    
+    // 10. Streak Calculation
+    let streak = 0;
+    for (let i = 0; i < 30; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(today.getDate() - i);
+      
+      const year = checkDate.getFullYear();
+      const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+      const day = String(checkDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      const tasksOnDate = userTasks.filter(task => {
+        if (task.status !== 'Completed') return false;
+        
+        let taskDateStr = '';
+        if (typeof task.dueDate === 'string') {
+          taskDateStr = task.dueDate.split('T')[0];
+        } else if (task.dueDate instanceof Date) {
+          const d = new Date(task.dueDate);
+          taskDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        
+        return taskDateStr === dateStr;
+      });
+      
+      if (tasksOnDate.length > 0) {
+        streak++;
+      } else {
+        if (i === 0) streak = 0;
+        break;
+      }
+    }
+    
+    const stats = {
+      totalPlans,
+      totalTasks,              // ✅ Total tasks
+      completedTasks,          // ✅ Completed tasks
+      studyHours: totalStudyHours, // ✅ Study hours
+      todayTasks: todayTasksCount,
+      completedToday: completedTodayCount,
+      streak,
+      recentPlans,
+      todayTasksList
+    };
+    
+    console.log('📊 Sending stats:', stats);
+    res.send(stats);
+    
+  } catch (error) {
+    console.error('❌ Dashboard stats error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
+
+
+
+app.get('/api/plans/recent', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.query;
+    const recentPlans = await planCollection
+      .find({ userEmail: email })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .toArray();
+    res.send(recentPlans);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+//  Today's Tasks API
+app.get('/api/tasks/today', verifyFBToken, async (req, res) => {
+  try {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    const tasks = await taskCollection
+      .find({ 
+        dueDate: { $regex: todayStr } 
+      })
+      .toArray();
+    res.send(tasks);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+
+//Analytics Page
+
+// 📌 1. Weekly Activity Data
+app.get('/api/analytics/weekly', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    // Get user's plans
+    const userPlans = await planCollection.find({ userEmail: email }).toArray();
+    const planIds = userPlans.map(plan => plan._id.toString());
+    
+    // Get all tasks for user
+    const allTasks = await taskCollection.find().toArray();
+    const userTasks = allTasks.filter(task => planIds.includes(task.planId));
+    
+    // Get last 7 days data
+    const weeklyData = [];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      // Find tasks completed on this date
+      const tasksOnDate = userTasks.filter(task => {
+        if (task.status !== 'Completed') return false;
+        
+        let taskDateStr = '';
+        if (typeof task.dueDate === 'string') {
+          taskDateStr = task.dueDate.split('T')[0];
+        }
+        return taskDateStr === dateStr;
+      });
+      
+      const totalHours = tasksOnDate.reduce((sum, task) => sum + (task.estimatedTime || 0), 0);
+      
+      weeklyData.push({
+        day: days[date.getDay()],
+        date: dateStr,
+        hours: totalHours,
+        tasks: tasksOnDate.length
+      });
+    }
+    
+    res.send(weeklyData);
+  } catch (error) {
+    console.error('Weekly analytics error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 2. Subject Distribution
+app.get('/api/analytics/subjects', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    // Get user's plans
+    const userPlans = await planCollection.find({ userEmail: email }).toArray();
+    
+    // Calculate subject distribution
+    const subjectMap = new Map();
+    
+    userPlans.forEach(plan => {
+      const subject = plan.subject || 'Uncategorized';
+      const currentHours = subjectMap.get(subject) || 0;
+      subjectMap.set(subject, currentHours + (plan.totalHours || 0));
+    });
+    
+    const totalHours = Array.from(subjectMap.values()).reduce((sum, hours) => sum + hours, 0);
+    
+    const subjectData = Array.from(subjectMap.entries()).map(([name, hours]) => ({
+      name,
+      hours,
+      percentage: totalHours > 0 ? Math.round((hours / totalHours) * 100) : 0
+    }));
+    
+    res.send(subjectData);
+  } catch (error) {
+    console.error('Subject analytics error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 3. Completion Rate
+app.get('/api/analytics/completion', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    // Get user's plans
+    const userPlans = await planCollection.find({ userEmail: email }).toArray();
+    const planIds = userPlans.map(plan => plan._id.toString());
+    
+    // Get all tasks
+    const allTasks = await taskCollection.find().toArray();
+    const userTasks = allTasks.filter(task => planIds.includes(task.planId));
+    
+    const totalTasks = userTasks.length;
+    const completedTasks = userTasks.filter(t => t.status === 'Completed').length;
+    const inProgressTasks = userTasks.filter(t => t.status === 'In Progress').length;
+    const pendingTasks = userTasks.filter(t => t.status === 'Pending').length;
+    
+    // On time vs delayed (simplified)
+    const today = new Date();
+    const onTimeTasks = userTasks.filter(task => {
+      if (task.status !== 'Completed') return false;
+      if (!task.dueDate) return true;
+      
+      const dueDate = new Date(task.dueDate);
+      return dueDate >= today;
+    }).length;
+    
+    res.send({
+      total: totalTasks,
+      completed: completedTasks,
+      inProgress: inProgressTasks,
+      pending: pendingTasks,
+      completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+      onTime: totalTasks > 0 ? Math.round((onTimeTasks / totalTasks) * 100) : 0,
+      delayed: totalTasks > 0 ? 100 - Math.round((onTimeTasks / totalTasks) * 100) : 0
+    });
+  } catch (error) {
+    console.error('Completion analytics error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 4. Total Stats
+app.get('/api/analytics/stats', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    // Get user's plans
+    const userPlans = await planCollection.find({ userEmail: email }).toArray();
+    const planIds = userPlans.map(plan => plan._id.toString());
+    
+    // Get all tasks
+    const allTasks = await taskCollection.find().toArray();
+    const userTasks = allTasks.filter(task => planIds.includes(task.planId));
+    
+    const totalPlans = userPlans.length;
+    const totalTasks = userTasks.length;
+    const completedTasks = userTasks.filter(t => t.status === 'Completed').length;
+    const totalHours = userTasks.reduce((sum, task) => sum + (task.estimatedTime || 0), 0);
+    
+    // Find most productive day
+    const dayMap = new Map();
+    userTasks.forEach(task => {
+      if (task.status === 'Completed' && task.dueDate) {
+        const date = new Date(task.dueDate);
+        const day = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        dayMap.set(day, (dayMap.get(day) || 0) + 1);
+      }
+    });
+    
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let mostProductiveDay = 'N/A';
+    let maxTasks = 0;
+    
+    dayMap.forEach((count, day) => {
+      if (count > maxTasks) {
+        maxTasks = count;
+        mostProductiveDay = days[day];
+      }
+    });
+    
+    res.send({
+      totalPlans,
+      totalTasks,
+      completedTasks,
+      totalHours,
+      mostProductiveDay,
+      averageTasksPerPlan: totalPlans > 0 ? (totalTasks / totalPlans).toFixed(1) : 0
+    });
+  } catch (error) {
+    console.error('Stats analytics error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
+
+//calender
+// 📌 1. Get tasks for calendar (by month)
+app.get('/api/calendar/tasks', verifyFBToken, async (req, res) => {
+  try {
+    const { email, month, year } = req.query;
+    
+    console.log('📅 Fetching calendar tasks for:', { email, month, year });
+    
+    // Get user's plans
+    const userPlans = await planCollection.find({ userEmail: email }).toArray();
+    const planIds = userPlans.map(plan => plan._id.toString());
+    
+    // Get all tasks
+    const allTasks = await taskCollection.find().toArray();
+    
+    // Filter tasks that belong to user's plans
+    const userTasks = allTasks.filter(task => planIds.includes(task.planId));
+    
+    // Filter by month/year if provided
+    let filteredTasks = userTasks;
+    if (month && year) {
+      const monthNum = parseInt(month);
+      const yearNum = parseInt(year);
+      
+      filteredTasks = userTasks.filter(task => {
+        if (!task.dueDate) return false;
+        
+        let taskDate = null;
+        if (typeof task.dueDate === 'string') {
+          taskDate = new Date(task.dueDate);
+        } else if (task.dueDate instanceof Date) {
+          taskDate = task.dueDate;
+        }
+        
+        if (taskDate) {
+          return taskDate.getMonth() === monthNum && 
+                 taskDate.getFullYear() === yearNum;
+        }
+        return false;
+      });
+    }
+    
+    // Group tasks by date
+    const tasksByDate = {};
+    filteredTasks.forEach(task => {
+      if (!task.dueDate) return;
+      
+      let dateStr = '';
+      if (typeof task.dueDate === 'string') {
+        dateStr = task.dueDate.split('T')[0];
+      } else if (task.dueDate instanceof Date) {
+        const d = new Date(task.dueDate);
+        dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      
+      if (!tasksByDate[dateStr]) {
+        tasksByDate[dateStr] = [];
+      }
+      tasksByDate[dateStr].push({
+        ...task,
+        _id: task._id.toString()
+      });
+    });
+    
+    res.send({
+      tasksByDate,
+      totalTasks: filteredTasks.length
+    });
+    
+  } catch (error) {
+    console.error('Calendar API error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
+
+// 📌 2. Get tasks for specific date
+app.get('/api/calendar/tasks-by-date', verifyFBToken, async (req, res) => {
+  try {
+    const { email, date } = req.query;
+    
+    console.log('📅 Fetching tasks for date:', date);
+    
+    // Get user's plans
+    const userPlans = await planCollection.find({ userEmail: email }).toArray();
+    const planIds = userPlans.map(plan => plan._id.toString());
+    
+    // Get all tasks
+    const allTasks = await taskCollection.find().toArray();
+    
+    // Filter tasks for specific date
+    const tasksForDate = allTasks.filter(task => {
+      if (!task.dueDate || !planIds.includes(task.planId)) return false;
+      
+      let taskDateStr = '';
+      if (typeof task.dueDate === 'string') {
+        taskDateStr = task.dueDate.split('T')[0];
+      } else if (task.dueDate instanceof Date) {
+        const d = new Date(task.dueDate);
+        taskDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      
+      return taskDateStr === date;
+    });
+    
+    // Get plan details for each task
+    const tasksWithPlanDetails = await Promise.all(tasksForDate.map(async (task) => {
+      const plan = await planCollection.findOne({ _id: new ObjectId(task.planId) });
+      return {
+        ...task,
+        _id: task._id.toString(),
+        planTitle: plan?.title || 'Unknown Plan',
+        planSubject: plan?.subject || ''
+      };
+    }));
+    
+    res.send(tasksWithPlanDetails);
+    
+  } catch (error) {
+    console.error('Tasks by date error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
+
+//profile
+
+
+app.put('/users/:email', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { name } = req.body;
+    
+    const query = { email: email };
+    const update = { $set: { name: name } };
+    
+    const result = await usersCollection.updateOne(query, update);
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+});
+
+
+// 📌 DELETE user account (সব ডাটা সহ)
+app.delete('/users/:email', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    console.log('🗑️ Deleting user account:', email);
+    
+    // 1. প্রথমে user এর সব plans খুঁজে বের করো
+    const userPlans = await planCollection.find({ userEmail: email }).toArray();
+    const planIds = userPlans.map(plan => plan._id.toString());
+    
+    // 2. সব plans এর tasks ডিলিট করো
+    if (planIds.length > 0) {
+      for (const planId of planIds) {
+        await taskCollection.deleteMany({ planId: planId });
+      }
+    }
+    
+    // 3. সব plans ডিলিট করো
+    await planCollection.deleteMany({ userEmail: email });
+    
+    // 4. user ডিলিট করো
+    const result = await usersCollection.deleteOne({ email: email });
+    
+    console.log('✅ User account deleted successfully');
+    res.send({ 
+      message: 'User account deleted successfully',
+      deletedCount: result.deletedCount 
+    });
+    
+  } catch (error) {
+    console.error('❌ Delete user error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
+
 
 
 
