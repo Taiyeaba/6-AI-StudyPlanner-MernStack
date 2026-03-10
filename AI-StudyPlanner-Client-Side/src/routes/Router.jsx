@@ -15,6 +15,7 @@ import BlogDetails from "../Withoutloginfile/BlogDetails";
 import CreatePlan from "../LoginFile/CreatePlan";
 import PlanDetails from "../LoginFile/PlanDetails";
 import EditPlan from "../LoginFile/EditPlan";
+import Profile from "../LoginFile/Profile";
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: '/about',
         element: <About />,
+      },
+      {
+        path: '/profile',
+        element: <Profile />,
       },
       {
         path: '/features',

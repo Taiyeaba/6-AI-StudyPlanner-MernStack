@@ -32,7 +32,9 @@ const CreatePlan = () => {
           title: 'Success!',
           text: 'Plan created successfully',
           timer: 1500,
-          showConfirmButton: false
+          showConfirmButton: false,
+          background: '#1f2937',
+          color: '#fff'
         });
         navigate('/plans');
       }
@@ -41,121 +43,123 @@ const CreatePlan = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error!',
-        text: error.response?.data?.message || 'Failed to create plan'
+        text: error.response?.data?.message || 'Failed to create plan',
+        background: '#1f2937',
+        color: '#fff'
       });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 pt-20 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 pt-16 sm:pt-20 px-3 sm:px-4 pb-8 sm:pb-10">
+      <div className="max-w-2xl mx-auto w-full">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Create New Study Plan</h1>
-          <p className="text-gray-400">Plan your learning journey</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2 break-words">Create New Study Plan</h1>
+          <p className="text-gray-400 text-sm sm:text-base">Plan your learning journey</p>
         </div>
 
         {/* Form */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
             
             {/* Title */}
             <div>
-              <label className="text-gray-300 text-sm mb-1 block">Plan Title *</label>
+              <label className="text-gray-300 text-xs sm:text-sm mb-1 block">Plan Title *</label>
               <input
                 type="text"
                 {...register("title", { required: "Title is required" })}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                className="w-full p-2 sm:p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 text-sm sm:text-base focus:outline-none focus:border-indigo-500"
                 placeholder="e.g., React Mastery"
               />
-              {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title.message}</p>}
+              {errors.title && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.title.message}</p>}
             </div>
 
             {/* Subject */}
             <div>
-              <label className="text-gray-300 text-sm mb-1 block">Subject *</label>
+              <label className="text-gray-300 text-xs sm:text-sm mb-1 block">Subject *</label>
               <input
                 type="text"
                 {...register("subject", { required: "Subject is required" })}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                className="w-full p-2 sm:p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 text-sm sm:text-base focus:outline-none focus:border-indigo-500"
                 placeholder="e.g., Web Development"
               />
-              {errors.subject && <p className="text-red-400 text-sm mt-1">{errors.subject.message}</p>}
+              {errors.subject && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.subject.message}</p>}
             </div>
 
             {/* Priority */}
             <div>
-              <label className="text-gray-300 text-sm mb-2 block">Priority *</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
+              <label className="text-gray-300 text-xs sm:text-sm mb-1 sm:mb-2 block">Priority *</label>
+              <div className="flex flex-wrap gap-3 sm:gap-4">
+                <label className="flex items-center gap-1 sm:gap-2">
                   <input 
                     type="radio" 
                     {...register("priority", { required: "Priority is required" })} 
                     value="High" 
-                    className="accent-red-500"
+                    className="accent-red-500 w-3 h-3 sm:w-4 sm:h-4"
                   />
-                  <span className="text-red-400">🔴 High</span>
+                  <span className="text-red-400 text-xs sm:text-sm">🔴 High</span>
                 </label>
-                <label className="flex items-center gap-2">
+                <label className="flex items-center gap-1 sm:gap-2">
                   <input 
                     type="radio" 
                     {...register("priority", { required: "Priority is required" })} 
                     value="Medium" 
-                    className="accent-yellow-500"
+                    className="accent-yellow-500 w-3 h-3 sm:w-4 sm:h-4"
                   />
-                  <span className="text-yellow-400">🟡 Medium</span>
+                  <span className="text-yellow-400 text-xs sm:text-sm">🟡 Medium</span>
                 </label>
-                <label className="flex items-center gap-2">
+                <label className="flex items-center gap-1 sm:gap-2">
                   <input 
                     type="radio" 
                     {...register("priority", { required: "Priority is required" })} 
                     value="Low" 
-                    className="accent-green-500"
+                    className="accent-green-500 w-3 h-3 sm:w-4 sm:h-4"
                   />
-                  <span className="text-green-400">🟢 Low</span>
+                  <span className="text-green-400 text-xs sm:text-sm">🟢 Low</span>
                 </label>
               </div>
-              {errors.priority && <p className="text-red-400 text-sm mt-1">{errors.priority.message}</p>}
+              {errors.priority && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.priority.message}</p>}
             </div>
 
             {/* Total Hours */}
             <div>
-              <label className="text-gray-300 text-sm mb-1 block">Total Hours *</label>
+              <label className="text-gray-300 text-xs sm:text-sm mb-1 block">Total Hours *</label>
               <input
                 type="number"
                 {...register("totalHours", { 
                   required: "Total hours is required", 
                   min: { value: 1, message: "Minimum 1 hour" }
                 })}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                className="w-full p-2 sm:p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 text-sm sm:text-base focus:outline-none focus:border-indigo-500"
                 placeholder="e.g., 50"
               />
-              {errors.totalHours && <p className="text-red-400 text-sm mt-1">{errors.totalHours.message}</p>}
+              {errors.totalHours && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.totalHours.message}</p>}
             </div>
 
             {/* Target Date */}
             <div>
-              <label className="text-gray-300 text-sm mb-1 block">Target Date *</label>
+              <label className="text-gray-300 text-xs sm:text-sm mb-1 block">Target Date *</label>
               <input
                 type="date"
                 {...register("targetDate", { required: "Target date is required" })}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full p-2 sm:p-3 bg-white/5 border border-white/10 rounded-lg text-white text-sm sm:text-base focus:outline-none focus:border-indigo-500"
               />
-              {errors.targetDate && <p className="text-red-400 text-sm mt-1">{errors.targetDate.message}</p>}
+              {errors.targetDate && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.targetDate.message}</p>}
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
               <button
                 type="submit"
-                className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 transition-all"
+                className="w-full xs:flex-1 py-2 sm:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 transition-all text-sm sm:text-base"
               >
                 Create Plan
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/plans')}
-                className="px-6 py-3 bg-white/5 border border-white/10 text-gray-300 rounded-lg font-medium hover:bg-white/10 transition-all"
+                className="w-full xs:flex-1 py-2 sm:py-3 bg-white/5 border border-white/10 text-gray-300 rounded-lg font-medium hover:bg-white/10 transition-all text-sm sm:text-base"
               >
                 Cancel
               </button>

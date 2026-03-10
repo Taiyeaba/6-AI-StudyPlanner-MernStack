@@ -59,8 +59,8 @@ const axiosSecure = useAxiosSecure();
   // Active link style for desktop
   const activeLinkStyle = ({ isActive }) =>
     isActive
-      ? "text-indigo-400 font-medium border-b-2 border-indigo-400 pb-1"
-      : "text-gray-300 hover:text-white transition-colors";
+      ? "text-indigo-400 font-medium border-b-2 border-indigo-400 pb-1 text-sm lg:text-base"
+      : "text-gray-300 hover:text-white transition-colors text-sm lg:text-base";
 
   return (
     <>
@@ -75,7 +75,7 @@ const axiosSecure = useAxiosSecure();
         </Link>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-2 lg:gap-4 xl:gap-8">
+        <div className="hidden md:flex items-center gap-3 lg:gap-4 xl:gap-6">
           <NavLink to="/" className={activeLinkStyle} end>Home</NavLink>
           {!user ? (
             <>
@@ -90,6 +90,7 @@ const axiosSecure = useAxiosSecure();
               <NavLink to="/plans" className={activeLinkStyle}>My Plans</NavLink>
               <NavLink to="/calendar" className={activeLinkStyle}>Calendar</NavLink>
               <NavLink to="/analytics" className={activeLinkStyle}>Analytics</NavLink>
+               <NavLink to="/profile" className={activeLinkStyle}>Profile</NavLink>
             </>
           )}
         </div>
@@ -204,6 +205,7 @@ const axiosSecure = useAxiosSecure();
                 <MobileMenuLink to="/plans" onClick={() => setIsMobileMenuOpen(false)}>My Plans</MobileMenuLink>
                 <MobileMenuLink to="/calendar" onClick={() => setIsMobileMenuOpen(false)}>Calendar</MobileMenuLink>
                 <MobileMenuLink to="/analytics" onClick={() => setIsMobileMenuOpen(false)}>Analytics</MobileMenuLink>
+                    <MobileMenuLink to="/profile" onClick={() => setIsMobileMenuOpen(false)}>Profile</MobileMenuLink>
               </div>
             )}
           </div>
