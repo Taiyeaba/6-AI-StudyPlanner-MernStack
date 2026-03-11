@@ -1,3 +1,5 @@
+
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const admin = require("firebase-admin");
 const express = require('express');
@@ -79,9 +81,12 @@ app.post('/users', async (req, res) => {
   const query = { email: user.email };
   const existingUser = await usersCollection.findOne(query);
 
+  // if (existingUser) {
+  //   return res.send({ message: 'user already exists' });
+  // }
   if (existingUser) {
-    return res.send({ message: 'user already exists' });
-  }
+  return res.send({ message: 'user already exists', user: existingUser });  // ← success
+}
 
   const result = await usersCollection.insertOne(user);
   res.send(result);

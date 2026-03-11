@@ -17,6 +17,7 @@ import PlanDetails from "../LoginFile/PlanDetails";
 import EditPlan from "../LoginFile/EditPlan";
 import Profile from "../LoginFile/Profile";
 
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -52,6 +53,8 @@ export const router = createBrowserRouter([
         path: '/dashboard',
         element: <Dashboard />,
       },
+ 
+
 
       {
         path: '/plans',

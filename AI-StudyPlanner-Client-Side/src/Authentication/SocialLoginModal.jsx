@@ -1,4 +1,6 @@
 
+
+
 import React from "react";
 import { FaGoogle } from "react-icons/fa";
 import useAuth from "../hooks/UseAuth";
@@ -12,36 +14,6 @@ const SocialLoginModal = ({ onClose }) => {
 const axiosSecure = useAxiosSecure();
 
 
-  // const handleGoogleSignIn = () => {
-  //   signInWithGoogle()
-  //     .then(result => {
-  //       console.log(result.user);
-        
-  //       // SweetAlert 
-  //       Swal.fire({
-  //         icon: 'success',
-  //         title: 'Login Successful!',
-  //         text: 'Welcome to Study Planner',
-  //         timer: 1500,
-  //         showConfirmButton: false
-  //       });
-        
-      
-  //       if (onClose) onClose();
-  //       navigate('/');
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-        
-       
-  //       Swal.fire({
-  //         icon: 'error',
-  //         title: 'Login Failed',
-  //         text: error.message || 'Something went wrong',
-  //         confirmButtonColor: '#6366f1'
-  //       });
-  //     });
-  // };
 
 const handleGoogleSignIn = () => {
   signInWithGoogle()
@@ -55,8 +27,20 @@ const handleGoogleSignIn = () => {
       };
 
       // MongoDB save
-      const res = await axiosSecure.post('/users', userInfo);
-      console.log(res.data);
+      // const res = await axiosSecure.post('/users', userInfo);
+      // console.log(res.data);
+   try {
+  const res = await axiosSecure.post('/users', userInfo);
+  console.log('User save response:', res.data);
+} catch (error) {
+  console.log('User already exists or other error:', error);
+  // error এ কিছু করবেন না
+}
+// এরপর success message
+
+
+
+
 
       Swal.fire({
         icon: 'success',

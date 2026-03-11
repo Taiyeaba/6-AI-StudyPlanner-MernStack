@@ -1,4 +1,5 @@
 
+
 import React, { useState } from "react";
 import SocialLoginModal from "./SocialLoginModal";
 import { useForm } from "react-hook-form";
@@ -17,39 +18,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const axiosSecure = useAxiosSecure();
   const password = watch("password");
 
-  // const onSubmit = (data) => {
-  //   console.log("Register Data:", data);
-  //   createUser(data.email, data.password)
-  //     .then(result => {
-  //       console.log(result.user);
-        
-  //       // SweetAlert for success
-  //       Swal.fire({
-  //         icon: 'success',
-  //         title: 'Registration Successful!',
-  //         text: 'Welcome to Study Planner',
-  //         timer: 1500,
-  //         showConfirmButton: false
-  //       });
-        
-     
-  //       onClose();
-  //       reset();
-  //       navigate('/');
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-        
-       
-  //       Swal.fire({
-  //         icon: 'error',
-  //         title: 'Registration Failed',
-  //         text: error.message || 'Something went wrong',
-  //         confirmButtonColor: '#6366f1'
-  //       });
-  //     });
-  // };
-
+  
   const onSubmit = (data) => {
 
   createUser(data.email, data.password)
