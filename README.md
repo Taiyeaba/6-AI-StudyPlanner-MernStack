@@ -1,6 +1,6 @@
 # 📚 Study Planner - MERN Stack Project
 
-![Study Planner Banner](https://i.ibb.co.com/your-banner-image.jpg)
+![Study Planner Banner](https://github.com/user-attachments/assets/2544eb95-455e-44dc-9a49-389e6fdf0572)
 
 ---
 
@@ -126,25 +126,29 @@ study-planner/
 
 
 ### Dashboard
-![Dashboard](https://i.ibb.co.com/KzfGpLYd/Screenshot-2026-03-11-011921.png)
+![Dashboard](https://github.com/user-attachments/assets/72eba689-4a47-409f-a375-736204d12c2d)
 
 ### Plans Page
-![Plans](https://i.ibb.co.com/Wv64CJrC/Screenshot-2026-03-11-012535.png)
+![Plans](https://github.com/user-attachments/assets/69496dec-03d5-4a48-b0c5-af1175e7cc34)
 
 ### Plan Details
-![Details](https://i.ibb.co.com/Wpz1V58Q/Screenshot-2026-03-11-233715.png)
+![Details](https://github.com/user-attachments/assets/855c0b54-c5b4-4018-b4e5-56cae8596d48)
 
 ### Analytics
-![Analytics](https://i.ibb.co.com/0y1gdch1/Screenshot-2026-03-11-012632.png)
+![Analytics](https://github.com/user-attachments/assets/9b11ffbb-460a-4bc8-b07f-3c6a3024a665)
+
+### Analytics part 2
+![Analytics](https://github.com/user-attachments/assets/2ba57182-b3dc-4ca5-a478-4177b3fa0151)
+
 
 ### Calendar
-![Calendar](https://i.ibb.co.com/QqHbwLt/Screenshot-2026-03-11-012601.png)
+![Calendar]("https://github.com/user-attachments/assets/9653e6bd-3beb-4628-8952-1ea51a0f1da4)
 
 ### Profile
-![Profile](https://i.ibb.co.com/1YYgJHK5/Screenshot-2026-03-11-224234.png)
+![Profile](https://github.com/user-attachments/assets/e4831e43-622c-473e-afe3-7af197d1cf16)
 
 ### Gmail Message
-![Profile](https://i.ibb.co.com/VpLMqvZZ/Screenshot-2026-03-11-223408.png)
+![Profile](https://github.com/user-attachments/assets/7729e2b5-92f5-4ec4-b8d8-f3a522c19c14)
 ---
 
 
