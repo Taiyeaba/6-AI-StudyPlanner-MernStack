@@ -800,25 +800,7 @@ app.put('/users/:email/reminder', verifyFBToken, async (req, res) => {
 
 
 
-
-
-
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-   
-  }
-}
-run().catch(console.dir);
-
-
-
-
-
-
-// ===============
-// EMAIL REMINDER SYSTEM 
-// ===============
+//************ */
 
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
@@ -833,7 +815,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-
 transporter.verify((error, success) => {
   if (error) {
     console.log('❌ Email server error:', error);
@@ -842,9 +823,7 @@ transporter.verify((error, success) => {
   }
 });
 
-
 const lastSentMap = new Map();
-
 
 async function getTodayTasks(email) {
   const today = new Date();
@@ -853,7 +832,7 @@ async function getTodayTasks(email) {
   const day = String(today.getDate()).padStart(2, '0');
   const todayStr = `${year}-${month}-${day}`;
   
-  console.log(`📅 Today's date: ${todayStr}`);
+  console.log(`📅 Getting tasks for date: ${todayStr}`);
   
   const userPlans = await planCollection.find({ userEmail: email }).toArray();
   const planIds = userPlans.map(p => p._id.toString());
@@ -867,7 +846,6 @@ async function getTodayTasks(email) {
   return todayTasks;
 }
 
-// Send email function
 const sendReminderEmail = async (user, tasks) => {
   try {
     console.log(`📧 Preparing email for ${user.email} with ${tasks.length} tasks`);
@@ -939,18 +917,22 @@ const sendReminderEmail = async (user, tasks) => {
 };
 
 
-cron.schedule('0 * * * *', async () => {
-  console.log('⏰ Checking for reminders at:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+// PRODUCTION MODE 
+
+cron.schedule('* * * * *', async () => {  
+  console.log('⏰ [PRODUCTION] Checking for reminders at:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
   
- 
   const now = new Date();
   const bangladeshTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
   const currentHour = bangladeshTime.getHours();
+  const currentMinute = bangladeshTime.getMinutes();
   
-  console.log(`🇧🇩 Bangladesh Time: ${currentHour}:00`);
+  // Current time as decimal (e.g., 21.5 for 9:30)
+  const currentTimeDecimal = currentHour + (currentMinute / 60);
+  
+  console.log(`🇧🇩 Current Bangladesh Time: ${currentHour}:${currentMinute} (${currentTimeDecimal.toFixed(2)})`);
   
   try {
-  
     const users = await usersCollection.find({ 
       emailNotifications: true,
       reminderEnabled: true 
@@ -959,33 +941,33 @@ cron.schedule('0 * * * *', async () => {
     console.log(`📊 Found ${users.length} users with reminders enabled`);
     
     for (const user of users) {
-    
-      const reminderTime = parseInt(user.reminderTime || '8');
+      const reminderTime = parseFloat(user.reminderTime || '8');
       
-      console.log(`👤 User ${user.email} wants reminder at ${reminderTime}:00, current hour: ${currentHour}`);
+      console.log(`👤 User ${user.email}: wants at ${reminderTime}, current=${currentTimeDecimal.toFixed(2)}`);
       
-     
-      if (reminderTime === currentHour) {
-        
+      // Check if times match (within 1 minute tolerance)
+      const timeDiff = Math.abs(reminderTime - currentTimeDecimal);
+      
+      if (timeDiff < 0.05) { // Within ~1 minute
         
         const today = new Date().toDateString();
         const lastSent = lastSentMap.get(user.email);
         
         if (lastSent === today) {
-          console.log(`⏰ Already sent to ${user.email} today at ${reminderTime}:00`);
+          console.log(`⏰ Already sent to ${user.email} today`);
           continue;
         }
         
-        console.log(`⏰ Time to send reminder to ${user.email} (${reminderTime}:00)`);
+        console.log(`✅ Sending reminder to ${user.email} at ${reminderTime}`);
         
         const todayTasks = await getTodayTasks(user.email);
         
         if (todayTasks.length > 0) {
           await sendReminderEmail(user, todayTasks);
-          lastSentMap.set(user.email, today); 
+          lastSentMap.set(user.email, today);
+          console.log(`✅ Email sent to ${user.email}`);
         } else {
-          console.log(`📭 No tasks today for ${user.email}`);
-         
+          console.log(`📭 No tasks for ${user.email}`);
           lastSentMap.set(user.email, today);
         }
       }
@@ -995,9 +977,10 @@ cron.schedule('0 * * * *', async () => {
   }
 }, {
   scheduled: true,
-  timezone: "Asia/Dhaka"  
+  timezone: "Asia/Dhaka"
 });
 
+//TEST ROUTE
 
 app.post('/api/test-email-now', verifyFBToken, async (req, res) => {
   try {
@@ -1016,6 +999,7 @@ app.post('/api/test-email-now', verifyFBToken, async (req, res) => {
     }
     
     const todayTasks = await getTodayTasks(email);
+    console.log(`📋 Found ${todayTasks.length} tasks for ${email}`);
     
     if (todayTasks.length === 0) {
       return res.send({ 
@@ -1040,14 +1024,15 @@ app.post('/api/test-email-now', verifyFBToken, async (req, res) => {
   }
 });
 
+//************* */
 
-
-
-
-
-
-
-
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+   
+  }
+}
+run().catch(console.dir);
 
 
 app.get('/', (req, res) => {

@@ -124,13 +124,13 @@ const Profile = () => {
     try {
       const newValue = !reminderSettings.emailNotifications;
       console.log('Toggling notifications to:', newValue);
-      
+
       const response = await axiosSecure.put(`/users/${user.email}/reminder`, {
         emailNotifications: newValue
       });
-      
+
       console.log('Update response:', response.data);
-      
+
       setReminderSettings(prev => ({
         ...prev,
         emailNotifications: newValue
@@ -162,13 +162,13 @@ const Profile = () => {
     try {
       const newValue = !reminderSettings.reminderEnabled;
       console.log('Toggling reminder to:', newValue);
-      
+
       const response = await axiosSecure.put(`/users/${user.email}/reminder`, {
         reminderEnabled: newValue
       });
-      
+
       console.log('Update response:', response.data);
-      
+
       setReminderSettings(prev => ({
         ...prev,
         reminderEnabled: newValue
@@ -182,22 +182,27 @@ const Profile = () => {
   const handleTimeChange = async (time) => {
     try {
       console.log('Changing time to:', time);
-      
+
       const response = await axiosSecure.put(`/users/${user.email}/reminder`, {
         reminderTime: time
       });
-      
+
       console.log('Update response:', response.data);
-      
+
       setReminderSettings(prev => ({
         ...prev,
         reminderTime: time
       }));
 
+      // Format display time
+      const displayTime = time.includes('.')
+        ? time.replace('.', ':')
+        : `${time}:00`;
+
       Swal.fire({
         icon: 'success',
         title: 'Success!',
-        text: `Reminder time set to ${time}:00`,
+        text: `Reminder time set to ${displayTime}:00`,
         timer: 1500,
         showConfirmButton: false,
         background: '#1f2937',
@@ -615,27 +620,65 @@ const Profile = () => {
           {reminderSettings.reminderEnabled && (
             <div className="p-4 bg-white/5 rounded-lg">
               <p className="text-white text-sm mb-3">Select Reminder Time:</p>
+
               <div className="grid grid-cols-3 gap-2">
                 {['8', '9', '10', '17', '18', '19', '20', '21', '22'].map(time => (
                   <button
                     key={time}
                     onClick={() => handleTimeChange(time)}
-                    className={`py-2 px-3 rounded-lg text-sm transition-all ${
-                      reminderSettings.reminderTime === time
+                    className={`py-2 px-3 rounded-lg text-sm transition-all ${reminderSettings.reminderTime === time
                         ? 'bg-indigo-500 text-white'
                         : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                    }`}
+                      }`}
                   >
                     {time}:00
                   </button>
                 ))}
               </div>
+
+
+              {/* Half Hours Grid */}
+              <div className="border-t border-white/10 pt-3 mt-2">
+                <p className="text-gray-400 text-xs mb-2">Half hours:</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {['8:30', '9:30', '17:30', '18:30', '19:30', '20:30', '21:30', '22:30'].map(time => {
+                    // ✅ সঠিক কনভার্শন
+                    const [hours, minutes] = time.split(':');
+                    const timeValue = (parseInt(hours) + (parseInt(minutes) / 60)).toFixed(2);
+                    // "21:30" → "21.50" ✅
+
+                    return (
+                      <button
+                        key={time}
+                        onClick={() => handleTimeChange(timeValue)}
+                        className={`py-2 px-3 rounded-lg text-sm transition-all ${reminderSettings.reminderTime === timeValue
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                          }`}
+                      >
+                        {time}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+
+
               <p className="text-xs text-gray-400 mt-3">
                 ⏰ You'll receive email at {reminderSettings.reminderTime}:00
               </p>
             </div>
           )}
         </div>
+
+
+
+
+
+
+
 
         {/* Quick Actions */}
         <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
