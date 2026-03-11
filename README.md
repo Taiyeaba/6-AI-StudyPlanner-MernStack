@@ -124,18 +124,27 @@ study-planner/
 
 ## 📸 **Screenshots**
 
-| Dashboard | Plans Page |
-|-----------|------------|
-| ![Dashboard](https://i.ibb.co.com/KzfGpLYd/Screenshot-2026-03-11-011921.png) | ![Plans](https://i.ibb.co.com/plans.jpg) |
 
-| Plan Details | Analytics |
-|--------------|-----------|
-| ![Details](https://i.ibb.co.com/details.jpg) | ![Analytics](https://i.ibb.co.com/analytics.jpg) |
+### Dashboard
+![Dashboard](https://i.ibb.co.com/KzfGpLYd/Screenshot-2026-03-11-011921.png)
 
-| Calendar | Profile |
-|----------|---------|
-| ![Calendar](https://i.ibb.co.com/calendar.jpg) | ![Profile](https://i.ibb.co.com/profile.jpg) |
+### Plans Page
+![Plans](https://i.ibb.co.com/Wv64CJrC/Screenshot-2026-03-11-012535.png)
 
+### Plan Details
+![Details](https://i.ibb.co.com/Wpz1V58Q/Screenshot-2026-03-11-233715.png)
+
+### Analytics
+![Analytics](https://i.ibb.co.com/0y1gdch1/Screenshot-2026-03-11-012632.png)
+
+### Calendar
+![Calendar](https://i.ibb.co.com/QqHbwLt/Screenshot-2026-03-11-012601.png)
+
+### Profile
+![Profile](https://i.ibb.co.com/1YYgJHK5/Screenshot-2026-03-11-224234.png)
+
+### Gmail Message
+![Profile](https://i.ibb.co.com/VpLMqvZZ/Screenshot-2026-03-11-223408.png)
 ---
 
 
