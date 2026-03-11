@@ -126,7 +126,7 @@ study-planner/
 
 | Dashboard | Plans Page |
 |-----------|------------|
-| ![Dashboard](https://i.ibb.co.com/dashboard.jpg) | ![Plans](https://i.ibb.co.com/plans.jpg) |
+| ![Dashboard](https://i.ibb.co.com/KzfGpLYd/Screenshot-2026-03-11-011921.png) | ![Plans](https://i.ibb.co.com/plans.jpg) |
 
 | Plan Details | Analytics |
 |--------------|-----------|
