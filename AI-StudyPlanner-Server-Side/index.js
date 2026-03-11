@@ -21,6 +21,27 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
+//custom middlewares
+const verifyFBToken = async(req,res,next) => {
+  const authHeader = req.headers.authorization;
+  if(!authHeader){
+    return res.status(401).send({message:'unauthorized Access'})
+  }
+  const token = authHeader.split(' ')[1];
+  if(!token){
+    return  res.status(401).send({message:'unauthorized Access'})
+  }
+  //verify the token
+  try{
+    const decoded = await admin.auth().verifyIdToken(token);
+    req.decoded = decoded;
+      next();
+  }
+catch (error){
+  return res.status(403).send({message:'forbidden access'})
+}
+
+}
 
 
 
@@ -48,27 +69,6 @@ const taskCollection = database.collection('tasks');
 
 
 
-//custom middlewares
-const verifyFBToken = async(req,res,next) => {
-  const authHeader = req.headers.authorization;
-  if(!authHeader){
-    return res.status(401).send({message:'unauthorized Access'})
-  }
-  const token = authHeader.split(' ')[1];
-  if(!token){
-    return  res.status(401).send({message:'unauthorized Access'})
-  }
-  //verify the token
-  try{
-    const decoded = await admin.auth().verifyIdToken(token);
-    req.decoded = decoded;
-      next();
-  }
-catch (error){
-  return res.status(403).send({message:'forbidden access'})
-}
-
-}
 
 
 
@@ -581,7 +581,7 @@ app.get('/api/analytics/stats', verifyFBToken, async (req, res) => {
 });
 
 //calender
-// 📌 1. Get tasks for calendar (by month)
+//  Get tasks for calendar (by month)
 app.get('/api/calendar/tasks', verifyFBToken, async (req, res) => {
   try {
     const { email, month, year } = req.query;
@@ -655,7 +655,7 @@ app.get('/api/calendar/tasks', verifyFBToken, async (req, res) => {
   }
 });
 
-// 📌 2. Get tasks for specific date
+//  2. Get tasks for specific date
 app.get('/api/calendar/tasks-by-date', verifyFBToken, async (req, res) => {
   try {
     const { email, date } = req.query;
@@ -721,28 +721,28 @@ app.put('/users/:email', verifyFBToken, async (req, res) => {
 });
 
 
-// 📌 DELETE user account (with all data)
+//  DELETE user account
 app.delete('/users/:email', verifyFBToken, async (req, res) => {
   try {
     const { email } = req.params;
     
     console.log('🗑️ Deleting user account:', email);
     
-    // 1. প্রথমে user এর সব plans খুঁজে বের করো
+    
     const userPlans = await planCollection.find({ userEmail: email }).toArray();
     const planIds = userPlans.map(plan => plan._id.toString());
     
-    // 2. সব plans এর tasks ডিলিট করো
+    
     if (planIds.length > 0) {
       for (const planId of planIds) {
         await taskCollection.deleteMany({ planId: planId });
       }
     }
     
-    // 3. সব plans ডিলিট করো
+   
     await planCollection.deleteMany({ userEmail: email });
     
-    // 4. user ডিলিট করো
+   
     const result = await usersCollection.deleteOne({ email: email });
     
     console.log('✅ User account deleted successfully');
@@ -816,12 +816,13 @@ run().catch(console.dir);
 
 
 
-
-// ******** EMAIL REMINDER SYSTEM
-
+// ===============
+// EMAIL REMINDER SYSTEM 
+// ===============
 
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
+const moment = require('moment-timezone');
 
 // Email transporter setup
 const transporter = nodemailer.createTransport({
@@ -832,10 +833,45 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.log('❌ Email server error:', error);
+  } else {
+    console.log('✅ Email server is ready');
+  }
+});
+
+
+const lastSentMap = new Map();
+
+
+async function getTodayTasks(email) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+  
+  console.log(`📅 Today's date: ${todayStr}`);
+  
+  const userPlans = await planCollection.find({ userEmail: email }).toArray();
+  const planIds = userPlans.map(p => p._id.toString());
+  
+  const allTasks = await taskCollection.find().toArray();
+  const todayTasks = allTasks.filter(t => 
+    planIds.includes(t.planId) && 
+    t.dueDate?.split('T')[0] === todayStr
+  );
+  
+  return todayTasks;
+}
+
 // Send email function
 const sendReminderEmail = async (user, tasks) => {
   try {
-    // Create task list HTML
+    console.log(`📧 Preparing email for ${user.email} with ${tasks.length} tasks`);
+    
     const taskList = tasks.map(task => `
       <tr style="border-bottom: 1px solid #e5e7eb;">
         <td style="padding: 12px; color: #1f2937;">${task.title}</td>
@@ -849,19 +885,16 @@ const sendReminderEmail = async (user, tasks) => {
       </tr>
     `).join('');
 
-    // Email HTML template
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <!-- Header -->
         <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
           <h1 style="color: white; margin: 0;">📚 Study Planner</h1>
           <p style="color: #e0e7ff; margin: 10px 0 0;">Daily Study Reminder</p>
         </div>
         
-        <!-- Content -->
         <div style="background: white; padding: 30px; border: 1px solid #e5e7eb;">
           <h2 style="color: #1f2937; margin-top: 0;">Hello ${user.name || 'Student'}! 👋</h2>
-          <p style="color: #4b5563;">You have <strong>${tasks.length}</strong> task${tasks.length > 1 ? 's' : ''} scheduled for today:</p>
+          <p style="color: #4b5563;">You have <strong>${tasks.length}</strong> task${tasks.length > 1 ? 's' : ''} for today:</p>
           
           <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
             <thead>
@@ -876,14 +909,13 @@ const sendReminderEmail = async (user, tasks) => {
             </tbody>
           </table>
           
-          <a href="${process.env.FRONTEND_URL}/dashboard" 
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard" 
              style="display: inline-block; background: #4f46e5; color: white; padding: 12px 30px; 
                     text-decoration: none; border-radius: 5px; margin-top: 20px;">
             View Dashboard →
           </a>
         </div>
         
-        <!-- Footer -->
         <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
           <p>Stay consistent and achieve your goals! 💪</p>
           <p style="margin-top: 10px;">© 2026 Study Planner</p>
@@ -891,7 +923,6 @@ const sendReminderEmail = async (user, tasks) => {
       </div>
     `;
 
-    // Send email
     await transporter.sendMail({
       from: '"Study Planner" <noreply@studyplanner.com>',
       to: user.email,
@@ -900,24 +931,26 @@ const sendReminderEmail = async (user, tasks) => {
     });
 
     console.log(`✅ Email sent to ${user.email}`);
+    return true;
   } catch (error) {
     console.error(`❌ Email error for ${user.email}:`, error.message);
+    return false;
   }
 };
 
-// ⏰ Check reminders every minute
-cron.schedule('* * * * *', async () => {
-  console.log('⏰ Checking for reminders...');
+
+cron.schedule('0 * * * *', async () => {
+  console.log('⏰ Checking for reminders at:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
   
+ 
   const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
+  const bangladeshTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+  const currentHour = bangladeshTime.getHours();
   
-  // Only run at minute 0 of each hour
-  if (currentMinute !== 0) return;
+  console.log(`🇧🇩 Bangladesh Time: ${currentHour}:00`);
   
   try {
-    // Get all users with notifications enabled
+  
     const users = await usersCollection.find({ 
       emailNotifications: true,
       reminderEnabled: true 
@@ -926,40 +959,86 @@ cron.schedule('* * * * *', async () => {
     console.log(`📊 Found ${users.length} users with reminders enabled`);
     
     for (const user of users) {
-      // Check if current hour matches user's reminder time
+    
       const reminderTime = parseInt(user.reminderTime || '8');
       
+      console.log(`👤 User ${user.email} wants reminder at ${reminderTime}:00, current hour: ${currentHour}`);
+      
+     
       if (reminderTime === currentHour) {
+        
+        
+        const today = new Date().toDateString();
+        const lastSent = lastSentMap.get(user.email);
+        
+        if (lastSent === today) {
+          console.log(`⏰ Already sent to ${user.email} today at ${reminderTime}:00`);
+          continue;
+        }
+        
         console.log(`⏰ Time to send reminder to ${user.email} (${reminderTime}:00)`);
         
-        // Get today's date
-        const todayStr = now.toISOString().split('T')[0];
-        
-        // Get user's plans
-        const userPlans = await planCollection.find({ userEmail: user.email }).toArray();
-        const planIds = userPlans.map(p => p._id.toString());
-        
-        // Get all tasks
-        const allTasks = await taskCollection.find().toArray();
-        
-        // Filter today's tasks
-        const todayTasks = allTasks.filter(t => 
-          planIds.includes(t.planId) && 
-          t.dueDate?.split('T')[0] === todayStr
-        );
+        const todayTasks = await getTodayTasks(user.email);
         
         if (todayTasks.length > 0) {
           await sendReminderEmail(user, todayTasks);
+          lastSentMap.set(user.email, today); 
         } else {
           console.log(`📭 No tasks today for ${user.email}`);
+         
+          lastSentMap.set(user.email, today);
         }
       }
     }
   } catch (error) {
     console.error('❌ Reminder cron error:', error);
   }
+}, {
+  scheduled: true,
+  timezone: "Asia/Dhaka"  
 });
 
+
+app.post('/api/test-email-now', verifyFBToken, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    if (!email) {
+      return res.status(400).send({ message: 'Email is required' });
+    }
+    
+    console.log('📧 Sending test email to:', email);
+    
+    const user = await usersCollection.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).send({ message: 'User not found' });
+    }
+    
+    const todayTasks = await getTodayTasks(email);
+    
+    if (todayTasks.length === 0) {
+      return res.send({ 
+        message: 'No tasks for today', 
+        tasks: [],
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
+    
+    await sendReminderEmail(user, todayTasks);
+    
+    res.send({ 
+      success: true,
+      message: 'Test email sent successfully', 
+      tasks: todayTasks.length,
+      email: user.email
+    });
+    
+  } catch (error) {
+    console.error('❌ Test email error:', error);
+    res.status(500).send({ message: error.message });
+  }
+});
 
 
 
