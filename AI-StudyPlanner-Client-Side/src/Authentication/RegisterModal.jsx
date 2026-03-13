@@ -31,9 +31,9 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
         createdAt: new Date()
       };
 
-      // MongoDB save
+      
       await axiosSecure.post('/users', userInfo);
-  console.log(data); // <-- এটা add করো
+  console.log(data); 
       Swal.fire({
         icon: 'success',
         title: 'Registration Successful!',

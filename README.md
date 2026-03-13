@@ -9,8 +9,7 @@
 🌍 **Live Website:**  
 👉 
 🎥 **Project Demo Video:**  
-👉 
-
+👉 https://vimeo.com/1172676129?fl=ip&fe=ec
 
 ---
 
@@ -135,20 +134,20 @@ study-planner/
 ![Details](https://github.com/user-attachments/assets/855c0b54-c5b4-4018-b4e5-56cae8596d48)
 
 ### Analytics
-![Analytics](https://github.com/user-attachments/assets/9b11ffbb-460a-4bc8-b07f-3c6a3024a665)
+![Analytics](https://github.com/user-attachments/assets/0e68743c-5ccf-4477-a2f4-0d5bb861377f)
 
 ### Analytics part 2
-![Analytics](https://github.com/user-attachments/assets/2ba57182-b3dc-4ca5-a478-4177b3fa0151)
+![Analytics](https://github.com/user-attachments/assets/e86b3b44-618d-4b7e-be75-ce5704cded6c)
 
 
 ### Calendar
-![Calendar]("https://github.com/user-attachments/assets/9653e6bd-3beb-4628-8952-1ea51a0f1da4)
+![Calendar](https://github.com/user-attachments/assets/9653e6bd-3beb-4628-8952-1ea51a0f1da4)
 
 ### Profile
 ![Profile](https://github.com/user-attachments/assets/e4831e43-622c-473e-afe3-7af197d1cf16)
 
 ### Gmail Message
-![Profile](https://github.com/user-attachments/assets/7729e2b5-92f5-4ec4-b8d8-f3a522c19c14)
+![Profile](https://github.com/user-attachments/assets/286c39ef-d0cf-48f1-bb8c-8e026605ca52)
 ---
 
 
@@ -174,6 +173,7 @@ study-planner/
 - Daily email with today's tasks at selected time
 - Beautiful HTML email template
 - Only sends when tasks exist for that day
+- Limit to one email per day, ensuring the reminder is sent only once at the selected time.
 
 
 ---

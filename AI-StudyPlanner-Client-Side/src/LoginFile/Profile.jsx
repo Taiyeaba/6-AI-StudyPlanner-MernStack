@@ -1,4 +1,4 @@
-// frontend/src/LoginFile/Profile.jsx
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/UseAuth';
@@ -12,6 +12,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dbUser, setDbUser] = useState(null);
+
   const [stats, setStats] = useState({
     totalPlans: 0,
     totalTasks: 0,
@@ -19,6 +20,7 @@ const Profile = () => {
     studyHours: 0,
     streak: 0
   });
+
   const [editing, setEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -31,7 +33,7 @@ const Profile = () => {
     confirm: ''
   });
 
-  // Email Reminder Settings
+
   const [reminderSettings, setReminderSettings] = useState({
     emailNotifications: false,
     reminderTime: '8',
@@ -67,6 +69,7 @@ const Profile = () => {
       setLoading(false);
     }
   };
+
 
   // Fetch user reminder settings
   const fetchUserSettings = async () => {
@@ -178,31 +181,46 @@ const Profile = () => {
     }
   };
 
-  // Change Reminder Time
+ 
+  // Change Reminder Time 
   const handleTimeChange = async (time) => {
     try {
-      console.log('Changing time to:', time);
+      console.log('Sending time:', time, typeof time);
+
+     
+      let timeToSend;
+      if (typeof time === 'string') {
+        timeToSend = parseFloat(time);
+      } else {
+        timeToSend = time;
+      }
 
       const response = await axiosSecure.put(`/users/${user.email}/reminder`, {
-        reminderTime: time
+        reminderTime: timeToSend  
       });
 
       console.log('Update response:', response.data);
 
+   
       setReminderSettings(prev => ({
         ...prev,
-        reminderTime: time
+        reminderTime: timeToSend.toString()
       }));
 
-      // Format display time
-      const displayTime = time.includes('.')
-        ? time.replace('.', ':')
-        : `${time}:00`;
+    
+      let displayTime;
+      if (typeof time === 'number') {
+        
+        displayTime = Number.isInteger(time) ? `${time}:00` : time.toString().replace('.', ':');
+      } else {
+       
+        displayTime = time.includes('.') ? time.replace('.', ':') : `${time}:00`;
+      }
 
       Swal.fire({
         icon: 'success',
         title: 'Success!',
-        text: `Reminder time set to ${displayTime}:00`,
+        text: `Reminder time set to ${displayTime}`,
         timer: 1500,
         showConfirmButton: false,
         background: '#1f2937',
@@ -210,6 +228,13 @@ const Profile = () => {
       });
     } catch (error) {
       console.error('Error changing time:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: 'Failed to set reminder time',
+        background: '#1f2937',
+        color: '#fff'
+      });
     }
   };
 
@@ -622,13 +647,14 @@ const Profile = () => {
               <p className="text-white text-sm mb-3">Select Reminder Time:</p>
 
               <div className="grid grid-cols-3 gap-2">
-                {['8', '9', '10', '17', '18', '19', '20', '21', '22'].map(time => (
+                {['8', '9', '10', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22'].map(time => (
                   <button
                     key={time}
-                    onClick={() => handleTimeChange(time)}
-                    className={`py-2 px-3 rounded-lg text-sm transition-all ${reminderSettings.reminderTime === time
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+
+                    onClick={() => handleTimeChange(parseInt(time))}
+                    className={`py-2 px-3 rounded-lg text-sm transition-all ${reminderSettings.reminderTime == time
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
                       }`}
                   >
                     {time}:00
@@ -637,32 +663,7 @@ const Profile = () => {
               </div>
 
 
-              {/* Half Hours Grid */}
-              <div className="border-t border-white/10 pt-3 mt-2">
-                <p className="text-gray-400 text-xs mb-2">Half hours:</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {['8:30', '9:30', '17:30', '18:30', '19:30', '20:30', '21:30', '22:30'].map(time => {
-                    // ✅ সঠিক কনভার্শন
-                    const [hours, minutes] = time.split(':');
-                    const timeValue = (parseInt(hours) + (parseInt(minutes) / 60)).toFixed(2);
-                    // "21:30" → "21.50" ✅
-
-                    return (
-                      <button
-                        key={time}
-                        onClick={() => handleTimeChange(timeValue)}
-                        className={`py-2 px-3 rounded-lg text-sm transition-all ${reminderSettings.reminderTime === timeValue
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                          }`}
-                      >
-                        {time}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
+             
 
 
 

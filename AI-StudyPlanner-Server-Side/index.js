@@ -9,6 +9,13 @@ const port = process.env.PORT || 3000;
 require('dotenv').config();
 
 
+// ⭐⭐⭐ এই ২ লাইন কপি করে একদম উপরে পেস্ট করুন
+process.env.TZ = 'Asia/Dhaka';
+console.log('✅ Server Time:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+
+
+
+
 //middleware
 app.use(cors());
 app.use(express.json());
@@ -81,9 +88,7 @@ app.post('/users', async (req, res) => {
   const query = { email: user.email };
   const existingUser = await usersCollection.findOne(query);
 
-  // if (existingUser) {
-  //   return res.send({ message: 'user already exists' });
-  // }
+  
   if (existingUser) {
   return res.send({ message: 'user already exists', user: existingUser });  // ← success
 }
@@ -171,8 +176,6 @@ app.delete('/api/plans/:id', verifyFBToken, async (req, res) => {
   }
 });
 
-//task pg
-
 
 //  1. GET tasks by planId 
 app.get('/api/tasks/:planId', verifyFBToken, async (req, res) => {
@@ -189,20 +192,20 @@ app.post('/api/tasks', verifyFBToken, async (req, res) => {
   try {
     const taskData = req.body;
     
-    // dueDate কে YYYY-MM-DD format এ save করো
+    
     let dueDate = taskData.dueDate;
     
-    // যদি dueDate string এ থাকে, তাহলে ঠিক করে নাও
+   
     if (dueDate) {
       const date = new Date(dueDate);
-      dueDate = date.toISOString().split('T')[0]; // "2024-03-15" format
+      dueDate = date.toISOString().split('T')[0]; 
     }
     
     const result = await taskCollection.insertOne({
       planId: taskData.planId,
       title: taskData.title,
       estimatedTime: Number(taskData.estimatedTime),
-      dueDate: dueDate,  // ঠিক format এ save হবে
+      dueDate: dueDate,  
       status: taskData.status || 'Pending',
       notes: taskData.notes || '',
       createdAt: new Date()
@@ -550,7 +553,7 @@ app.get('/api/analytics/stats', verifyFBToken, async (req, res) => {
     userTasks.forEach(task => {
       if (task.status === 'Completed' && task.dueDate) {
         const date = new Date(task.dueDate);
-        const day = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const day = date.getDay(); 
         dayMap.set(day, (dayMap.get(day) || 0) + 1);
       }
     });
@@ -920,67 +923,61 @@ const sendReminderEmail = async (user, tasks) => {
 // PRODUCTION MODE 
 
 cron.schedule('* * * * *', async () => {  
-  console.log('⏰ [PRODUCTION] Checking for reminders at:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
-  
   const now = new Date();
   const bangladeshTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
   const currentHour = bangladeshTime.getHours();
   const currentMinute = bangladeshTime.getMinutes();
   
-  // Current time as decimal (e.g., 21.5 for 9:30)
-  const currentTimeDecimal = currentHour + (currentMinute / 60);
+  console.log(`🇧🇩 BD Time Check: ${currentHour}:${currentMinute}`);
   
-  console.log(`🇧🇩 Current Bangladesh Time: ${currentHour}:${currentMinute} (${currentTimeDecimal.toFixed(2)})`);
-  
-  try {
-    const users = await usersCollection.find({ 
-      emailNotifications: true,
-      reminderEnabled: true 
-    }).toArray();
+  if (currentMinute === 0 || currentMinute === 1) {
     
-    console.log(`📊 Found ${users.length} users with reminders enabled`);
-    
-    for (const user of users) {
-      const reminderTime = parseFloat(user.reminderTime || '8');
+    try {
+      const users = await usersCollection.find({ 
+        emailNotifications: true,
+        reminderEnabled: true 
+      }).toArray();
       
-      console.log(`👤 User ${user.email}: wants at ${reminderTime}, current=${currentTimeDecimal.toFixed(2)}`);
+      for (const user of users) {
+        const reminderTime = parseInt(user.reminderTime || '8');
+        
       
-      // Check if times match (within 1 minute tolerance)
-      const timeDiff = Math.abs(reminderTime - currentTimeDecimal);
-      
-      if (timeDiff < 0.05) { // Within ~1 minute
-        
-        const today = new Date().toDateString();
-        const lastSent = lastSentMap.get(user.email);
-        
-        if (lastSent === today) {
-          console.log(`⏰ Already sent to ${user.email} today`);
-          continue;
-        }
-        
-        console.log(`✅ Sending reminder to ${user.email} at ${reminderTime}`);
-        
-        const todayTasks = await getTodayTasks(user.email);
-        
-        if (todayTasks.length > 0) {
-          await sendReminderEmail(user, todayTasks);
-          lastSentMap.set(user.email, today);
-          console.log(`✅ Email sent to ${user.email}`);
-        } else {
-          console.log(`📭 No tasks for ${user.email}`);
-          lastSentMap.set(user.email, today);
+        if (reminderTime === currentHour) {
+          
+          // const today = new Date().toDateString();
+          // const lastSent = lastSentMap.get(user.email);
+          
+          // if (lastSent === today) {
+          //   console.log(`⏰ Already sent to ${user.email} today`);
+          //   continue;
+          // }
+          
+          console.log(`✅ Sending email to ${user.email} at ${reminderTime}:00 BD Time`);
+          
+          const todayTasks = await getTodayTasks(user.email);
+          
+          if (todayTasks.length > 0) {
+            await sendReminderEmail(user, todayTasks);
+            //lastSentMap.set(user.email, today);
+            console.log(`✅ Email sent to ${user.email}`);
+          } else {
+            console.log(`📭 No tasks for ${user.email}`);
+            //lastSentMap.set(user.email, today);
+          }
         }
       }
+    } catch (error) {
+      console.error('❌ Reminder cron error:', error);
     }
-  } catch (error) {
-    console.error('❌ Reminder cron error:', error);
   }
 }, {
   scheduled: true,
   timezone: "Asia/Dhaka"
 });
 
+
 //TEST ROUTE
+
 
 app.post('/api/test-email-now', verifyFBToken, async (req, res) => {
   try {

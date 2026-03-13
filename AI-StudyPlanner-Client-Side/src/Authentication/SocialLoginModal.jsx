@@ -34,12 +34,8 @@ const handleGoogleSignIn = () => {
   console.log('User save response:', res.data);
 } catch (error) {
   console.log('User already exists or other error:', error);
-  // error এ কিছু করবেন না
+  
 }
-// এরপর success message
-
-
-
 
 
       Swal.fire({
