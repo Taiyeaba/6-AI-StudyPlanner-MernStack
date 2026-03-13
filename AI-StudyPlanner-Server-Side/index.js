@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 require('dotenv').config();
 
 
-// ⭐⭐⭐ এই ২ লাইন কপি করে একদম উপরে পেস্ট করুন
+
 process.env.TZ = 'Asia/Dhaka';
 console.log('✅ Server Time:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
 
@@ -51,10 +51,7 @@ catch (error){
 }
 
 
-
-
 const uri = process.env.MONGODB_URI;
-
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -73,11 +70,6 @@ const database = client.db('StudyPlan');
 const usersCollection = database.collection('users');
 const planCollection = database.collection('plans');
 const taskCollection = database.collection('tasks');
-
-
-
-
-
 
 
 //users collection
@@ -584,7 +576,7 @@ app.get('/api/analytics/stats', verifyFBToken, async (req, res) => {
 });
 
 //calender
-//  Get tasks for calendar (by month)
+//  Get tasks for calendar 
 app.get('/api/calendar/tasks', verifyFBToken, async (req, res) => {
   try {
     const { email, month, year } = req.query;
