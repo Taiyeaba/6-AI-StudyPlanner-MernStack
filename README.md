@@ -7,7 +7,7 @@
 ## 🔗 Live Project Links
 
 🌍 **Live Website:**  
-👉 
+👉 https://studyplan-mernstack.web.app
 🎥 **Project Demo Video:**  
 👉 https://vimeo.com/1172676129?fl=ip&fe=ec
 
