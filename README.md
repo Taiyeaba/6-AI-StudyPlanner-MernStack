@@ -8,8 +8,12 @@
 
 🌍 **Live Website:**  
 👉 https://studyplan-mernstack.web.app
+
 🎥 **Project Demo Video:**  
 👉 https://vimeo.com/1172676129?fl=ip&fe=ec
+
+
+
 
 ---
 
@@ -173,7 +177,6 @@ study-planner/
 - Daily email with today's tasks at selected time
 - Beautiful HTML email template
 - Only sends when tasks exist for that day
-- Limit to one email per day, ensuring the reminder is sent only once at the selected time.
 
 
 ---
